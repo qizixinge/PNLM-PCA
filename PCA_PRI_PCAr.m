@@ -1,5 +1,6 @@
 function [fim] = PCA_PRI_PCAr(nim, x1, noise_map, option)
-%option=0 or 1, 0 internal, 1 external
+%external noise map won't be use when option = 0
+%noise map should have the same size as nim
 global etta
 global fai
 [dnim,noise_mapr]=NLPCA(nim,x1(1),x1(2),x1(3));
@@ -7,12 +8,12 @@ yichang=find(isnan(dnim));
 dnim(yichang)=nim(yichang);
 A1=size(nim,1);B1=size(nim,2);C1=size(nim,3);
 if option==0
-    cfai=(0.9953*noise_mapr-1.716)./(noise_mapr-1.787);
+    cfai=(0.9953*noise_mapr-1.716)./(noise_mapr-1.787);%proposed by the author
     idx=(noise_mapr<1.913); cfai(idx)=0;
-    noise_map=cfai.*noise_mapr;
     %For Manjon et al. (2015)
     %cfai=(0.9846*noise_mapr-1.6331)./(noise_mapr-1.86+0.1175);
     %idx=(noise_mapr<1.86);cfai(idx)=0;
+    noise_map=cfai.*noise_mapr;
 end
 %The fixed point formula of SNR in Koay and Baser (2006) 
 %establishes the analytical relationship between the magnitude 
