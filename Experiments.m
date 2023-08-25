@@ -11,8 +11,8 @@ alpha=0.4;
 %x1=[4 64 4 2.2 1.16];
 %%
 %precomputation
-ptheta=linspace(0,50,1000);
-effSNR=sqrt((2+ptheta.^2)./kexi(ptheta)-1);
+%ptheta=linspace(0,50,1000);
+%effSNR=sqrt((2+ptheta.^2)./kexi(ptheta)-1);
 global etta
 global fai
 load('precomputation.mat')
