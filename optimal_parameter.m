@@ -92,8 +92,8 @@ end
 
 %%
 %precomputation
-ptheta=linspace(0,50,1000);
-effSNR=sqrt((2+ptheta.^2)./kexi(ptheta)-1);
+%ptheta=linspace(0,50,1000);
+%effSNR=sqrt((2+ptheta.^2)./kexi(ptheta)-1);
 global etta
 global fai
 load('precomputation.mat')
