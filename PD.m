@@ -1,4 +1,6 @@
 function [fim] = PD(nim, gim, noise_map, x1)
+%noise map can be obtained by a noise estimator
+%noise map should have the same size as nim
 NNim1 = padarray(nim,[5, 5, 5],'symmetric');
 GGim = padarray(gim,[5, 5, 5],'symmetric');
 Noise_map=padarray(noise_map,[5, 5, 5],'symmetric');
