@@ -8,7 +8,7 @@ miu = imboxfilt3( GGim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
 PRINLMfim = RI_NLM(GGim, NNim1, Noise_map, miu,0.4);%~5min
 
 [fim,~]=NLPCA(PRINLMfim,x1(1), x1(2), x1(3));
-
+%when x1(1) * x1(2) is constant, the performance of PD remains unchanged
 yichang=find(isnan(fim));
 fim(yichang)=PRINLMfim(yichang);
 
