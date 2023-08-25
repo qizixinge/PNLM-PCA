@@ -60,3 +60,6 @@ The contents contained in the MATLAB files are the following:&#x20;
 ## 2. The structure of the auxiliary tool PD in the article
 
 The noise map input required by PD is estimated from the noisy data itself. A good filter can obtain the former during the pre-denoising process, such as the NL-PCA algorithm.
+
+![image](https://github.com/qizixinge/PCA-PRI-PCAr_and_PD/assets/128884645/8d31ecb1-48cd-4e3f-8668-9e4f1669a94f)
+
