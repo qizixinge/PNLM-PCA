@@ -1,6 +1,7 @@
 function [fim] = PCA_PRI_PCAr(nim, x1, noise_map, option)
 %external noise map won't be use when option = 0
 %noise map should have the same size as nim
+%actually we could let x1(3) = x1(1) * x1(2)
 global etta
 global fai
 [dnim,noise_mapr]=NLPCA(nim,x1(1),x1(2),x1(3));
