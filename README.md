@@ -29,9 +29,9 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 11.`psnrall.m`: A MATLAB function which is used to find the optimal value of (d, M, w, \$\tau\beta\$, T) in the NL-PCA filter.
 
-- 12.`bm4dw.m`: A MATLAB function which serves as the powerful auxiliary tool mentioned in the paper.
+- 12.`bm4dw.m`: A MATLAB function that performs Wiener filtering in BM4D.
 
-- 13.`bwp.m`: A MATLAB function that shows the new collaborative algorithm proposed by us.
+- 13.`bwp.m`: A MATLAB function that realizes a hybrid algorithm that replaces the hard thresholding stage in BM4D with NL-PCA filtering.
 
 - 14.`NLPCApso.m`: A MATLAB function which is the adaptation of NL-PCA filter for the PSO algorithm.
 
@@ -73,9 +73,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 33.`precomputation.m`: A MATLAB script file that shows how the data in `precomputation.mat` is calculated.
 
-- 34.`RiceOptVST`:
 
-- 35.`BM4D`: 
 
 
 
