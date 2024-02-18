@@ -25,31 +25,31 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 9.`RI_NLM.m`: A MATLAB function file that displays a possible version of rotationally invariant non-local mean filter.
 
-- 10.`psnrallM`: A MATLAB function which is used to find the optimal value of \$\tau\beta\$ and T in the NL-PCA filter.
+- 10.`psnrallM.m`: A MATLAB function which is used to find the optimal value of \$\tau\beta\$ and T in the NL-PCA filter.
 
-- 11.`psnrall`: A MATLAB function which is used to find the optimal value of (d, M, w, \$\tau\beta\$, T) in the NL-PCA filter.
+- 11.`psnrall.m`: A MATLAB function which is used to find the optimal value of (d, M, w, \$\tau\beta\$, T) in the NL-PCA filter.
 
 - 12.`bm4dw.m`: A MATLAB function which serves as the powerful auxiliary tool mentioned in the paper.
 
-- 13.`PCA_PRI_PCAr`: A MATLAB function that shows the new collaborative algorithm proposed by us.
+- 13.`bwp.m`: A MATLAB function that shows the new collaborative algorithm proposed by us.
 
-- 14.`NLPCApso`: A MATLAB function which is the adaptation of NL-PCA filter for the PSO algorithm.
+- 14.`NLPCApso.m`: A MATLAB function which is the adaptation of NL-PCA filter for the PSO algorithm.
 
-- 15.`NLPCAnp`: A MATLAB function that demonstrates the code for realizing the NL-PCA filter with exact noise level.
+- 15.`NLPCAnp.m`: A MATLAB function that demonstrates the code for realizing the NL-PCA filter with exact noise level.
 
 - 16.`NLPCA.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
 
-- 17.`kmeans`: for image segmentation.
+- 17.`kmeans.m`: for image segmentation.
 
 - 18.`farras.m`: nearly symmetric filters for orthogonal 2-channel perfect reconstruction filter bank.
 
 - 19.`epsi.m`: A MATLAB function file which calculate the correction factor \$\xi\$
 
-- 20.`dwt3D`: 3-D Discrete Wavelet Transform.
+- 20.`dwt3D.m`: 3-D Discrete Wavelet Transform.
 
-- 21.`cshift3D`: 3D Circular Shift.
+- 21.`cshift3D.m`: 3D Circular Shift.
 
-- 22.`afb3D`: 3D Analysis Filter Bank.
+- 22.`afb3D.m`: 3D Analysis Filter Bank.
 
 - 23.`OAS1_0001_MR1_mpr-1_anon.img`: An example data file of T1w image from the OASIS dataset.
 
@@ -61,7 +61,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 27.`RiC.m`:
 
-- 28.`bwp.m`:
+- 28.`truncateslice.m`:
 
 - 29.`cPRI_NL_PCA.mexw64`:
 
@@ -73,11 +73,10 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 33.`precomputation.m`:
 
-- 34.`truncateslice.m`:
+- 34.`RiceOptVST`:
 
 - 35.`BM4D`: 
 
-- 36.`RiceOptVST`: 
 
 
 
