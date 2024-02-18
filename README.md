@@ -11,11 +11,11 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 2.`pd_icbm_normal_1mm_pn0_rf0.rawb`: An example data file of PDw normal image from the BrainWeb dataset.
 
-- 3.`precomputation.mat`: A MATLAB data file which provides pre-computed relevant data for images' Rician correction.
+- 3.`precomputation.mat`: A MATLAB data file that provides pre-computed relevant data for images' Rician correction.
 
-- 4.`optimal_parameter.m`:A MATLAB script file which demonstrates the process of finding the optimal parameters of NLPCA.
+- 4.`optimal_parameter.m`:A MATLAB script file that demonstrates the process of finding the optimal parameters of NL-PCA.
 
-- 5.`Experiments.m`: A MATLAB script file which completely presents the code used in the whole process of the experiments.
+- 5.`Experiments.m`: A MATLAB script file that completely presents the code used in the whole process of the experiments.
 
 - 6.`ssim_index3d.m`: A MATLAB function file that calculates the SSIM of a denoised image.
 
@@ -71,7 +71,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 32.`optimizationRINLMmy.m`:
 
-- 33.`precomputation.m`:
+- 33.`precomputation.m`: A MATLAB file that shows how the data in `precomputation.mat` is calculated.
 
 - 34.`RiceOptVST`:
 
