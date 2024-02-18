@@ -97,8 +97,9 @@ if (nargin == 4)
 	   return;
    end
 end
-
-
+%稍作修改
+L=max(image1,[],'all');
+% L=4096;
 C1 = (K(1)*L)^2;
 C2 = (K(2)*L)^2;
 window = window/sum(window(:));

@@ -1,6 +1,8 @@
 function [dnim,noise_mapr] = NLPCA(nnim,tau,beta, T)
-%original literature
+%original literature 
+% using formula (2)
 d=4;M=64;w=3;s=3;
+%d=3;M=27;w=3;s=2;
 xw=2*w+1; W=xw^3;
 % XW=zeros(1,xw);
 % for i=1:xw
@@ -57,14 +59,15 @@ for j=1:numofwindow
         Ve = diag(Ve);
         [Ve, order]=sort(Ve , 'descend'); 
         Me = Me(: , order); 
-        Ve = sqrt(abs(Ve));
+        %Ve = sqrt(abs(Ve));
+        Ve = abs(Ve);
         %
-        medlmd = median(Ve );%linear median
-        temp3 = sum(Ve<=T*medlmd); medlmdt = median(Ve((D3-temp3+1):end ));
+        medlmd = sqrt(median(Ve));%linear median
+        temp3 = sum(sqrt(Ve)<=T*medlmd); medlmdt = sqrt(median(Ve((D3-temp3+1):end)));
         %Tau = tb* (medlmdt);
         sigma=beta* (medlmdt);
         Tau = tau*sigma;
-        Mes = Me( : , 1 : sum(Ve>=Tau));%linear threshold
+        Mes = Me( : , 1 : sum(sqrt(Ve)>=Tau));%linear threshold
         Y=XT*Mes;
         XFT=Y*Mes'+ones(size(XTO,1),1)*mean(XTO);
         for cc=1:d

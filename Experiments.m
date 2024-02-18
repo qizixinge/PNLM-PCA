@@ -1,26 +1,25 @@
 %%
-%a series of experiemnts
-%We have obtained the set of parameters that make the algorithm have the best denoising performance
-% d=3;M=38;w=3;tauopt=1.1418;betaopt=1.7557;
-% taurtn=1.397 ;betartn=1.4350;
-% x1=[d,M,w,tauopt,betaopt];x2=[d,M,w,taurtn,betartn];
+
 noisesm=255*0.01*[1 3 5 7 9];
-noiselr=255*0.01*[1 7 13 19 25];
-x1=[2.12 1.16 2.46];
+
+%x1=[2.12 1.16 2.46];
 alpha=0.4;
+imsizes=[181,217,10];
+imsize=[181,217,181];
+
+ker=[1 1 1];
 %x1=[4 64 4 2.2 1.16];
 %%
 %precomputation
-%ptheta=linspace(0,50,1000);
-%effSNR=sqrt((2+ptheta.^2)./kexi(ptheta)-1);
+
 global etta
 global fai
 load('precomputation.mat')
 %%
 %load in data
 % read the file
-imsize=[181,217,181];
-file1 ='t1_icbm_normal_1mm_pn0_rf0.rawb';
+
+file1 ='pd_icbm_normal_1mm_pn0_rf0.rawb';
 %file1='brainwebmag.rawb';
 fid1 = fopen(file1,'r');    
 im1=zeros(imsize(1:3));
@@ -38,778 +37,628 @@ for z=1:imsize(3)
 end
 fclose(fid2);
 
-% file3 ='T1w_acpc_dc_restore.nii';
-% fid3 = fopen(file3,'r');    
-% im3=zeros(imsize(1:3));
-% for z=1:imsize(3)    
-%     im3(:,:,z) = fread(fid3,imsize(1:2));
-% end
-% fclose(fid3);
-ker=[1 1 1];
-index=find(im1>0);
+% data need to be convert from single to double
+nii=load_nii('T1w_acpc_dc_restore.nii.gz');
+imh=nii.img;
+imh=double(imh);
+ma3=max(imh,[],'all');
+nii=load_nii('OAS1_0001_MR1_mpr-1_anon.img');
+imo=nii.img;
+imo= double(imo);
+
+% reslice_nii('IXI132-HH-1415-T2.nii.gz', 'HH-1415-T2.nii.gz');
+% nii=load_nii('HH-1415-T2.nii.gz');
+% imix=nii.img;
+% maix=max(imix,[],'all');
+
+noimch=RicianSTD(imh);
+
+noimo = RicianSTD(imo);
+
+%noimix = RicianSTD(imix);
+
+
 %%
-%First check the correctness of the algorithm qualitatively
-%opt vs rtn, stationary
-%This section is estimated to take 10 hours to run
-% PSNRopt1=zeros(1,5);PSNRrtn1=zeros(1,5);
-% PSNRopt2=zeros(1,5);PSNRrtn2=zeros(1,5);
-% ssimopt1=zeros(1,5);ssimrtn1=zeros(1,5);
-% ssimopt2=zeros(1,5);ssimrtn2=zeros(1,5);
-% x1=[d,M,w,tauopt,betaopt];x2=[d,M,w,taurtn,betartn];
-% for i=1:5
-%     Nim1=ricernd(im1, noisesm(i)*ones(imsize(1:3)));
-%     nnim1 = Nim1;
-%     Nim2=ricernd(im2, noisesm(i)*ones(imsize(1:3)));
-%     nnim2 = Nim2;
-%     [PSNRopt1(i),ssimopt1(i),PRINLMfim15]=psnrallnv(im1,nnim1,Nim1,x1,0.4);
-%     [PSNRrtn1(i),ssimrtn1(i),PRINLMfim14]=psnrallnv(im1,nnim1,Nim1,x2,0.5);
-%     [PSNRopt2(i),ssimopt2(i),PRINLMfim25]=psnrallnv(im2,nnim2,Nim2,x1,0.4);
-%     [PSNRrtn2(i),ssimrtn2(i),PRINLMfim24]=psnrallnv(im2,nnim2,Nim2,x2,0.5);
-% end
-%%
-%timing algorithm
+%timing algorithm 9%
+Nimbw=ricernd(im2, 2.55*9*ones(imsize(1:3)));
+Nimh=imh;
+% Nimbw=ricernd(im1, 2.55*9*ones(181,217,6));
+% Nimh=ricernd(imh, 40.96*9*ones(260,311,6));
+Nimo=imo;
+
 %NL-PCA
-tic
-Nim1=ricernd(im1, 2.55*ones(imsize(1:3)));
-[dnim,~]=NLPCA(single(Nim1),x1(1),x1(2),x1(3));
-toc
 
-% sigma2 = imboxfilt3(Nim1.^2 , 3 , 'padding' , 'symmetric')-imboxfilt3(Nim1 , 3 , 'padding' , 'symmetric').^2;
-%         sigma = sqrt(sigma2);
-%         logamma =  imboxfilt3(Nim1 , 3 , 'padding' , 'symmetric')./sigma;
-%         cfai =  (0.9953*logamma-1.716)./(logamma-1.787) ; idx = (logamma<1.913); cfai(idx) = 0;
-%         noise_mapg = cfai.*noise_mapr;
-%         noise_mapg=imboxfilt3(noise_mapg , 15 , 'padding' , 'symmetric');
-%         Cov = std( noise_mapg , 1 , 'all' )/mean( noise_mapg , 'all');
-%         if Cov <0.15
-%             noise_map = mean( noise_mapg , 'all')*ones(181,217,181);
-%         else
-%             noise_map = noise_mapg;
-%         end
-        noise_map=2.55*ones(181,217,181);
-        eetta = dnim ./ noise_map;
-        eetta=reshape(eetta,1,181*217*181);
-        idxe = (eetta<min(etta)); eetta(idxe) = min(etta);%avoid outliers
-        temp = interp1(etta, fai, eetta, 'linear');%arrayfun(@ettainv, eetta);
-        temp=reshape(temp,181,217,181);
-        gim = noise_map.* temp;
-NNim1 = padarray(Nim1,[5, 5, 5],'symmetric');
-        GGim = padarray(gim,[5, 5, 5],'symmetric');
-        Noise_map=padarray(noise_map,[5, 5, 5],'symmetric');
-        miu = imboxfilt3( GGim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-        
-%PRI-NLM
-tic
-        PRINLMfim = RI_NLM(GGim, NNim1, Noise_map, miu,0.4);%~5min
-toc
-%
 
-%psnr = 20*log10(255/sqrt(mean((im1(index)-PRINLMfim(index)).^2)));
+tb(1,1)=datetime;
+Dnimpbw=NLPCAnp( (Nimbw),2.55*9,2.2);
+tb(2,1)=datetime;
+th(1,1)=datetime;
+Dnimph=NLPCAnp( (Nimh),noimch,2.2);
+th(2,1)=datetime;
+to(1,1)=datetime;
+Dnimpo=NLPCAnp( (Nimo),noimo,2.2);
+to(2,1)=datetime;
+
+
+
+%BM4D
+tb(1,2)=datetime;
+[~,Dnimbbw,~]=bm4d(1, Nimbw/255, 0.09, 1,1,1,0,0);%0,1,1,0,0
+tb(2,2)=datetime;
+th(1,2)=datetime;
+[~,Dnimbh,~]=bm4d(1, Nimh/1024, noimch/1024, 1,1,1,0,0);Dnimbh=Dnimbh*1024;
+th(2,2)=datetime;
+to(1,2)=datetime;
+[~,Dnimbo,~]=bm4d(1, Nimo/1024, noimo/1024, 1,1,1,0,0);Dnimbo=Dnimbo*1024;
+to(2,2)=datetime;
+% %BM4D noise estimation only care for time, not accuracy
+% [~,~,noim]=bm4d(1, Nimbw/255, 0, 1,1,1,0,0);%0,1,1,0,0
+% toc;
+% tic;
+% [~,~,noim]=bm4d(1, Nimh/4096, 0, 1,1,1,0,0);
+% toc;
+% tic;
+% [~,~,noim]=bm4d(1, Nimo/4096, 0, 1,1,1,0,0);
+% toc;
+
+%PRIsl-NL-PCA subscript
+tb(1,3)=datetime;
+%Ppim = RI_NLM(RiC(Dnimpbw,2.55*9), Nimbw, 2.55*9, alpha);
+Ppimbw = cPRI_NL_PCA(Nimbw,9,1,2.55*9*ones(181,217,181),RiC(Dnimpbw,2.55*9),1); 
+tb(2,3)=datetime;
+th(1,3)=datetime;
+%Ppim = RI_NLM(RiC(Dnimph,40.96*9), Nimh, 40.96*9, alpha);
+Ppimh = cPRI_NL_PCA(Nimh,9,1,noimch*ones(260,311,260),RiC(Dnimph,noimch),1); 
+th(2,3)=datetime;
+to(1,3)=datetime;
+Ppim = RI_NLM(RiC(Dnimpo,noimo), Nimo, noimo, alpha);
+Ppimo = cPRI_NL_PCA(Nimo,9,1,noimo*ones(256,256,128),RiC(Dnimpo,noimo),1); 
+to(2,3)=datetime;
+%PRIvg-NL-PCA
+
+tb(1,4)=datetime;
+ppim = RINLMmy(RiC(Dnimpbw,2.55*9),Nimbw,2.55*9,alpha,8);
+
+tb(2,4)=datetime;
+th(1,4)=datetime;
+
+rt=1024/255;
+        nnimh=(Nimh/rt);dnnim=RiC(Dnimph,noimch)/rt;
+        nnimh(nnimh>255)=255;dnnim(dnnim>255)=255;
+        ppim = RINLMmy(dnnim, nnimh, noimch/rt,alpha,8);
+
+% ppimh = RINLMmy(RiC(Dnimph,10.24*9)/rt,Nimh/rt,2.55*9,alpha,8);
+% ppimh=ppimh*1024/255;
+th(2,4)=datetime;
+
+to(1,4)=datetime;
+rt=1024/255;
+        nnimo=(Nimo/rt);dnnim=RiC(Dnimpo,noimo)/rt;
+        nnimo(nnimo>255)=255;dnnim(dnnim>255)=255;
+ppim= RINLMmy(dnnim,nnimo,noimo/rt,alpha,8);
+to(2,4)=datetime;
+
+
+%BM4Dw-NL-PCA
+
+tb(1,5)=datetime;
+bwpim=bwp(1,Nimbw/255,0.09,1,1,1);
+
+tb(2,5)=datetime;
+th(1,5)=datetime;
+bwpim=bwp(1,Nimh/1024,noimch/1024,1,1,1);
+th(2,5)=datetime;
+to(1,5)=datetime;
+bwpim=bwp(1,Nimo/1024,noimo/1024,1,1,1);
+to(2,5)=datetime;
+
+%PRI-bh
+tb(1,6)=datetime;
+[~,bhimbw,~]=bm4d(1, Nimbw/255, 0.09, 1,1,0,0,0);bhimbw=bhimbw*255;
+        Pbhim=cPRI_NL_PCA(Nimbw,9,1,2.55*9*ones(181,217,181),bhimbw,1);
+
+tb(2,6)=datetime;
+th(1,6)=datetime;
+[~,bhimh,~]=bm4d(1, Nimh/1024, noimch/1024, 1,1,0,0,0);bhimh=bhimh*1024;
+        Pbhim=cPRI_NL_PCA(Nimh,9,1,noimch*ones(260,311,260),bhimh,1);
+th(2,6)=datetime;
+to(1,6)=datetime;
+[~,bhimo,~]=bm4d(1, Nimo/1024, noimo/1024, 1,1,0,0,0);bhimo=bhimo*1024;
+        Pbhim=cPRI_NL_PCA(Nimo,9,1,noimo*ones(256,256,128),bhimo,1);
+to(2,6)=datetime;
+
+
+
+
+%pri-bh
+
+tb(1,7)=datetime;
+
+
+
+
+pbhim=RINLMmy(bhimbw,Nimbw,2.55*9,0.4,8);
+
+tb(2,7)=datetime;
+th(1,7)=datetime;
+
+rt=1024/255;
+        nnimh=(Nimh/rt);dnnim=RiC(bhimh,noimch)/rt;
+        nnimh(nnimh>255)=255;dnnim(dnnim>255)=255;
+pbhim=RINLMmy(dnnim,nnimh,noimch/rt,0.4,8);
+
+
+
+th(2,7)=datetime;
+to(1,7)=datetime;
+
+rt=1024/255;
+        nnimo=(Nimo/rt);dnnim=RiC(bhimo,noimo)/rt;
+        nnimo(nnimo>255)=255;dnnim(dnnim>255)=255;
+ppimo = RINLMmy(dnnim,nnimo,noimo/rt,alpha,8);
+
+
+to(2,7)=datetime;
+
+
+
+
+
+
+
 %%
-%noisy image
-psnr1=zeros(1,5); psnr2=zeros(1,5);ssim1=zeros(1,5);ssim2=zeros(1,5);
-index1=find(im1>0);index2=find(im2>0);
-for i=1:5
-    nnim1=ricernd(im1,noisesm(i)*ones(181,217,181));
-    psnr1(i)=20*log10(255/sqrt(mean((im1(index1)-nnim1(index1)).^2)));
-    ssim1(i)=ssim_index3d(im1,nnim1,[1 1 1],index1);
-end    
-for i=1:5
-    nnim2=ricernd(im2,noisesm(i)*ones(181,217,181));
-    psnr2(i)=20*log10(255/sqrt(mean((im2(index2)-nnim2(index2)).^2)));
-    ssim2(i)=ssim_index3d(im2,nnim2,[1 1 1],index2);
-end    
+%truncate for faster computation
+% im1=truncateslice(im1,3);
+% im2=truncateslice(im2,3);
+% imh=truncateslice(imh,3);
+im1=truncateslice(im1,5);
+im2=truncateslice(im2,5);
+imh=truncateslice(imh,5);
+%imix=truncateslice(imix,5);
+%imo=truncateslice(imo,3);
+index1=find(im1>0);
+index2=find(im2>0);
+index3=find(imh>3*noimch);
+%indexix=find(imix>3*noimix);
 
-%%
-%draw map 9%
-% residual1=im1-PRINLMfim15;
-% residual2=im2-PRINLMfim25;
-% colormap(gray);
-% n=round(size(im1,3)/2);
-% subplot(4,4,1),imagesc(imrotate(im1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,2),imagesc(imrotate(Nim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,3),imagesc(imrotate(PRINLMfim15(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,4),imagesc(imrotate(residual1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,5),imagesc(imrotate(im2(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,6),imagesc(imrotate(Nim2(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,7),imagesc(imrotate(PRINLMfim25(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,8),imagesc(imrotate(residual2(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
+
+
+
+
+
+
 
 
 %%
-%median filter
+%median filter NLPCA
 PSNRmed=zeros(1,5);ssimed=zeros(1,5);
 PSNRnm=zeros(1,5);ssimnm=zeros(1,5);
 for i=1:5
-        Nim1=ricernd(im1, noiselr(i)*ones(imsize(1:3)));
-        nnim1 = medfilt3(Nim1);
-        [dnim1,~]=NLPCA(Nim1,x1(1),x1(2),x1(3));
-        [dnim2,~]=NLPCA(nnim1,x1(1),x1(2),x1(3));
-        PSNRmed(i)=20*log10(255/sqrt(mean((im1(index)-dnim2(index)).^2)));
-        ssimed(i)=ssim_index3d( dnim2 , im1 , ker , index );
-        PSNRnm(i)=20*log10(255/sqrt(mean((im1(index)-dnim1(index)).^2)));
-        ssimnm(i)=ssim_index3d( dnim1 , im1 , ker , index );
+        nimbw=ricernd(im1, noisesm(i)*ones(imsizes(1:3)));
+        nnim = medfilt3(nimbw);
+        dnim1=NLPCAnp(nimbw,noisesm(i),2.2);dnim1=RiC(dnim1,noisesm(i));
+        dnim2=NLPCAnp(nnim,noisesm(i),2.2);dnim2=RiC(dnim2,noisesm(i));
+        PSNRmed(i)=20*log10(255/sqrt(mean((im1(index1)-dnim2(index1)).^2)));
+        ssimed(i)=ssim_index3d( dnim2 , im1 , ker , index1 );
+        PSNRnm(i)=20*log10(255/sqrt(mean((im1(index1)-dnim1(index1)).^2)));
+        ssimnm(i)=ssim_index3d( dnim1 , im1 , ker , index1 );
 %         if i==5
 %             xuyao1=PRINLMfimm;
 %             xuyao2=PRINLMfimnm;
 %         end
 end
 
-% Nim1=ricernd(im1, 255*0.09*ones(imsize(1:3)));
-% 
-% residualm=im1-xuyao1;
-% residualnm=im1-xuyao2;
-% colormap(gray);
-% n=round(size(im1,3)/2);
-% subplot(4,4,9),imagesc(imrotate(im1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,10),imagesc(imrotate(Nim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,11),imagesc(imrotate(xuyao1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,12),imagesc(imrotate(residualm(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,13),imagesc(imrotate(xuyao2(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(4,4,14),imagesc(imrotate(residualnm(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
 
 
-%%
-%Universality test ——PRINLM
-% im0= ;
-% psnrexam=zeros(1,5);ssimexam=zeros(1,5);
-% for i=1:5
-%     noise3D=noisesm(i)*ones(imsize(1:3)); 
-%     Nim1=ricernd(im1, noise3D);
-%     Noise_map= noisesm(i)*ones( 191,227,191);
-%     cim=normrnd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-%     cgim=padarray(cim ,[5, 5, 5],'symmetric');
-%     miu=imboxfilt3( cgim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-%     alpha=0.4;NNim1=padarray(Nim1,[5, 5, 5],'symmetric');
-%     PRINLMfim2 = RI_NLM(cgim, NNim1, Noise_map, miu,alpha);%~5min
-%     PRINLMfim = RI_NLM(GGim, NNim1, Noise_map, miu,alpha);%~5min
-%     psnrexam(i)= 20*log10(255/sqrt(mean((im0(index)-PRINLMfim(index)).^2)));
-%     ssimexam(i)= ssim_index3d( PRINLMfim , im0 , ker , index );  
-% end    
+
+
+
+
+
+
 %%
 %Horizontal comparison im1
-psnrd=zeros(1,5);ssimd=zeros(1,5);
-psnrdgd=zeros(1,5);ssimdgd=zeros(1,5);
-psnrdg=zeros(1,5);ssimdg=zeros(1,5);
-psnrdd=zeros(1,5);ssimdd=zeros(1,5);
-psnrdgp=zeros(1,5);ssimdgp=zeros(1,5);
-psnrdgpp=zeros(1,5);ssimdgpp=zeros(1,5);
-psnrdgpd=zeros(1,5);ssimdgpd=zeros(1,5);
+psnrn=zeros(1,5);ssimn=zeros(1,5);
+psnrp=zeros(1,5);ssimp=zeros(1,5);
+psnrb=zeros(1,5);ssimb=zeros(1,5);
+psnrPp=zeros(1,5);ssimPp=zeros(1,5);
+psnrpp=zeros(1,5);ssimpp=zeros(1,5);
+psnrbwp=zeros(1,5);ssimbwp=zeros(1,5);
+psnrPbh=zeros(1,5);ssimPbh=zeros(1,5);
+psnrpbh=zeros(1,5);ssimpbh=zeros(1,5);
+
 for i=1:5
-        nnim1=ricernd(im1, noisesm(i)*ones(imsize(1:3)));
-        [dnim,~]=NLPCA(single(nnim1),x1(1),x1(2),x1(3));
-        noise_map=noisesm(i)*ones(181,217,181);
-        eetta = dnim ./ noise_map;
-        eetta=reshape(eetta,1,181*217*181);
-        idxe = (eetta<min(etta)); eetta(idxe) = min(etta);%avoid outliers
-        temp = interp1(etta, fai, eetta, 'linear');%arrayfun(@ettainv, eetta);
-        temp=reshape(temp,181,217,181);
-        gim = noise_map.* temp;
-        [dgdim,~]=NLPCA(single(gim),x1(1),x1(2),x1(3));
-        yichang=find(isnan(dgdim));
-        dgdim(yichang)=gim(yichang);
-        [ddim,~]=NLPCA(single(dnim),x1(1),x1(2),x1(3));
-        index = find(im1>0);
-        psnrd(i) = 20*log10(255/sqrt(mean((im1(index)-dnim(index)).^2)));
-        ssimd(i)=ssim_index3d( dnim , im1 , ker , index );
-        psnrdg(i) = 20*log10(255/sqrt(mean((im1(index)-gim(index)).^2)));
-        ssimdg(i)=ssim_index3d( gim , im1 , ker , index );
-        psnrdgd(i) = 20*log10(255/sqrt(mean((im1(index)-dgdim(index)).^2)));
-        ssimdgd(i)=ssim_index3d( dgdim , im1 , ker , index );
-        psnrdd(i)=20*log10(255/sqrt(mean((im1(index)-ddim(index)).^2)));
-        ssimdd(i)=ssim_index3d( ddim , im1 , ker , index );  
+        nim1=round(ricernd(im1, noisesm(i)*ones(imsizes(1:3))));
+        psnrn(i) = 20*log10(255/sqrt(mean((im1(index1)-nim1(index1)).^2)));
+        ssimn(i)=ssim_index3d( nim1 , im1 , ker , index1 );
+
+        %[dnim,~]=NLPCA( (nim1),2.2,1.29,2);
+        dnim = NLPCAnp(nim1,noisesm(i),2.2);
+        dnim = RiC(dnim,noisesm(i));
         
-        NNim1 = padarray(nnim1,[5, 5, 5],'symmetric');
-        GGim = padarray(gim,[5, 5, 5],'symmetric');
-        Noise_map=noisesm(i)*ones(191,227,191);%padarray(noise_map,[5, 5, 5],'symmetric');
-        miu = imboxfilt3( GGim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-        PRINLMfim = RI_NLM(GGim, NNim1, Noise_map, miu,alpha);%~5min
-        PPim=padarray(PRINLMfim,[5 5 5],'symmetric'  );
-        miup= imboxfilt3( PPim  , 'padding' , 'symmetric' ) ;
-        P2fim=RI_NLM(PPim, NNim1, noisesm(i)*ones(191,227,191), miup,0.4);%~5min
-        psnrdgpp(i)=20*log10(255/sqrt(mean((im1(index)-P2fim(index)).^2)));
-        ssimdgpp(i)=ssim_index3d( P2fim , im1 , ker , index );
-        psnrdgp(i)=20*log10(255/sqrt(mean((im1(index)-PRINLMfim(index)).^2)));
-        ssimdgp(i)=ssim_index3d( PRINLMfim , im1 , ker , index );
-        [dpim,~]=NLPCA(single(PRINLMfim),x1(1),x1(2),x1(3));
-        yichang=find(isnan(dpim));
-        dpim(yichang)=PRINLMfim(yichang);
-        psnrdgpd(i)=20*log10(255/sqrt(mean((im1(index)-dpim(index)).^2)));
-        ssimdgpd(i)=ssim_index3d( dpim , im1 , ker , index );
+        psnrp(i) = 20*log10(255/sqrt(mean((im1(index1)-round(dnim(index1))).^2)));
+        ssimp(i)=ssim_index3d( round(dnim) , im1 , ker , index1 );
+        
+        [~,bim,~] = bm4d(1, nim1/255, noisesm(i)/255, 1,1,1,0,0);bim=bim*255;
+        psnrb(i) = 20*log10(255/sqrt(mean((im1(index1)-round(bim(index1))).^2)));
+        ssimb(i)=ssim_index3d( round(bim) , im1 , ker , index1 );
+
+        Ppim = cPRI_NL_PCA(nim1,9,1,noisesm(i)*ones(181,217,10),dnim, 1);
+        ppim = RINLMmy(dnim, nim1, noisesm(i),0.4,8);
+        psnrPp(i) = 20*log10(255/sqrt(mean((im1(index1)-round(Ppim(index1))).^2)));
+        ssimPp(i)=ssim_index3d( round(Ppim) , im1 , ker , index1 );
+        psnrpp(i) = 20*log10(255/sqrt(mean((im1(index1)-round(ppim(index1))).^2)));
+        ssimpp(i)=ssim_index3d( round(ppim) , im1 , ker , index1 );
+
+        % bwpim=bm4dw(nim1,dnim,noisesm(i));
+        % bwpim=RiC(bwpim,noisesm(i));
+        bwpim = bwp(1,nim1/255,noisesm(i)/255,1,1,1);bwpim=bwpim*255;
+        psnrbwp(i) = 20*log10(255/sqrt(mean((im1(index1)-round(bwpim(index1))).^2)));
+        ssimbwp(i)=ssim_index3d( round(bwpim) , im1 , ker , index1 );
+
+        % bhim=bm4dh(nim1,noisesm(i));
+        % bhim=RiC(bhim,noisesm(i));
+        [~,bhim,~]=bm4d(1, nim1/255, noisesm(i)/255, 1,1,0,0,0);bhim=bhim*255;
+        Pbhim=cPRI_NL_PCA(nim1,9,1,noisesm(i)*ones(181,217,10),bhim,1);
+        pbhim=RINLMmy(bhim,nim1,noisesm(i),0.4,8);
+        psnrPbh(i) = 20*log10(255/sqrt(mean((im1(index1)-round(Pbhim(index1))).^2)));
+        ssimPbh(i)=ssim_index3d( round(Pbhim) , im1 , ker , index1 );
+        psnrpbh(i) = 20*log10(255/sqrt(mean((im1(index1)-round(pbhim(index1))).^2)));
+        ssimpbh(i)=ssim_index3d( round(pbhim) , im1 , ker , index1 );
+
+
 end
+% residualPp=im1-Ppim;
+% residualpp=im1-ppim;
+% residualb=im1-bim;
+% colormap(gray);
+
+% subplot(4,8,1),imagesc(imrotate(im1(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,8,2),imagesc(imrotate(nim1(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,8,3),imagesc(imrotate(Ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,8,4),imagesc(imrotate(ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,8,5),imagesc(imrotate(bim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,8,6),imagesc(imrotate(residualPp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,8,7),imagesc(imrotate(residualpp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,8,8),imagesc(imrotate(residualb(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+
 
 %%
 %Horizontal comparison im2
-psnrd2=zeros(1,5);ssimd2=zeros(1,5);
-psnrdgd2=zeros(1,5);ssimdgd2=zeros(1,5);
-psnrdg2=zeros(1,5);ssimdg2=zeros(1,5);
-psnrdd2=zeros(1,5);ssimdd2=zeros(1,5);ker=[1 1 1];
-psnrdgpp2=zeros(1,5);ssimdgpp2=zeros(1,5);
-psnrdgp2=zeros(1,5);ssimdgp2=zeros(1,5);
-psnrdgpd2=zeros(1,5);ssimdgpd2=zeros(1,5);
+psnrn2=zeros(1,5);ssimn2=zeros(1,5);
+psnrp2=zeros(1,5);ssimp2=zeros(1,5);
+psnrb2=zeros(1,5);ssimb2=zeros(1,5);
+psnrPp2=zeros(1,5);ssimPp2=zeros(1,5);
+psnrpp2=zeros(1,5);ssimpp2=zeros(1,5);
+psnrbwp2=zeros(1,5);ssimbwp2=zeros(1,5);
+psnrPbh2=zeros(1,5);ssimPbh2=zeros(1,5);
+psnrpbh2=zeros(1,5);ssimpbh2=zeros(1,5);
 for i=1:5
-        nnim2=ricernd(im2, noisesm(i)*ones(imsize(1:3)));
+%for i=4
+        nim2=round(ricernd(im2, noisesm(i)*ones(imsizes(1:3))));
+        psnrn2(i) = 20*log10(255/sqrt(mean((im2(index2)-nim2(index2)).^2)));
+        ssimn2(i)=ssim_index3d( nim2 , im2 , ker , index2 );
 
-        [dnim,~] =NLPCA(single(nnim2),x1(1),x1(2),x1(3));
-        noise_map=noisesm(i)*ones(181,217,181);
-        eetta = dnim ./ noise_map;
-        eetta=reshape(eetta,1,181*217*181);
-        idxe = (eetta<min(etta)); eetta(idxe) = min(etta);%avoid outliers
-        temp = interp1(etta, fai, eetta, 'linear');%arrayfun(@ettainv, eetta);
-        temp=reshape(temp,181,217,181);
-        gim = noise_map.* temp;
-        [dgdim,~] =NLPCA(single(gim),x1(1),x1(2),x1(3));
-        yichang=find(isnan(dgdim));
-        dgdim(yichang)=gim(yichang);
-        [ddim,~]=NLPCA(single(dnim),x1(1),x1(2),x1(3));
-        index = find(im2>0);
-        psnrd2(i) = 20*log10(255/sqrt(mean((im2(index)-dnim(index)).^2)));
-        ssimd2(i)=ssim_index3d( dnim , im2 , ker , index );
-        psnrdg2(i) = 20*log10(255/sqrt(mean((im2(index)-gim(index)).^2)));
-        ssimdg2(i)=ssim_index3d( gim , im2 , ker , index );
-        psnrdgd2(i) = 20*log10(255/sqrt(mean((im2(index)-dgdim(index)).^2)));
-        ssimdgd2(i)=ssim_index3d( dgdim , im2 , ker , index );
-        psnrdd2(i)=20*log10(255/sqrt(mean((im2(index)-ddim(index)).^2)));
-        ssimdd2(i)=ssim_index3d( ddim , im2 , ker , index );
-%     miut=miu(2:180,2:216,2:180);
-%     T1=miut(1,1,:);T2=miut(1,215,:);
-%     T3=miut(:,1,1);T4=miut(1,:,179);
-%     T5=miut(1,:,1);T6=miut(179,1,:);
-%     T7=miut(179,215,:);T8=miut(:,1,179);
-%     T9=miut(:,215,179);T10=miut(179,:,1);
-%     T11=miut(179,:,179);T12=miut(:,215,1);
-%     T=[T1(:);T2(:);T3(:);T4(:);T5(:);T6(:);T7(:);T8(:);T9(:);T10(:);T11(:);T12(:)];
-%     [T, ~]=sort(T); 
-%     med=median(T);
-%     temp = sum(T<1.5*med); medT = median(T(1:temp ));
-%     noisestimate=sqrt(2/pi)*medT;
-        NNim2 = padarray(nnim2,[5, 5, 5],'symmetric');
-        GGim = padarray(gim,[5, 5, 5],'symmetric');
-        Noise_map=noisesm(i)*ones(191,227,191);%Noise_map=padarray(noise_map,[5, 5, 5],'symmetric');
-        miu = imboxfilt3( GGim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-        PRINLMfim = RI_NLM(GGim, NNim2, Noise_map, miu,alpha);%~5min
-        PPim=padarray(PRINLMfim,[5 5 5],'symmetric'  );
-        miup= imboxfilt3( PPim  , 'padding' , 'symmetric' ) ;
-        P2fim=RI_NLM(PPim, NNim2, noisesm(i)*ones(191,227,191), miup,0.4);%~5min
-        psnrdgpp2(i)=20*log10(255/sqrt(mean((im2(index)-P2fim(index)).^2)));
-        ssimdgpp2(i)=ssim_index3d( P2fim , im2 , ker , index );
-        psnrdgp2(i)=20*log10(255/sqrt(mean((im2(index)-PRINLMfim(index)).^2)));
-        ssimdgp2(i)=ssim_index3d( PRINLMfim , im2 , ker , index );
-        [dpim,~] =NLPCA(single(PRINLMfim),x1(1),x1(2),x1(3));
-        yichang=find(isnan(dpim));
-        dpim(yichang)=PRINLMfim(yichang);
-        psnrdgpd2(i)=20*log10(255/sqrt(mean((im2(index)-dpim(index)).^2)));
-        ssimdgpd2(i)=ssim_index3d( dpim , im2 , ker , index );
+        dnim=NLPCAnp( (nim2),noisesm(i),2.2);
+        dnim = RiC(dnim,noisesm(i));
+        
+        psnrp2(i) = 20*log10(255/sqrt(mean((im2(index2)-round(dnim(index2))).^2)));
+        ssimp2(i)=ssim_index3d( round(dnim) , im2 , ker , index2 );
+        
+        [~,bim,~] = bm4d(1, nim2/255, noisesm(i)/255, 1,1,1,0,0);bim=bim*255;
+        psnrb2(i) = 20*log10(255/sqrt(mean((im2(index2)-round(bim(index2))).^2)));
+        ssimb2(i)=ssim_index3d( round(bim) , im2 , ker , index2 );
+
+        Ppim = cPRI_NL_PCA( nim2,9,1, noisesm(i)*ones(181,217,10),dnim,1);
+        ppim = RINLMmy(dnim, nim2, noisesm(i),alpha,8);
+        psnrPp2(i) = 20*log10(255/sqrt(mean((im2(index2)-round(Ppim(index2))).^2)));
+        ssimPp2(i)=ssim_index3d( round(Ppim) , im2 , ker , index2 );
+        psnrpp2(i) = 20*log10(255/sqrt(mean((im2(index2)-round(ppim(index2))).^2)));
+        ssimpp2(i)=ssim_index3d( round(ppim) , im2 , ker , index2 );
+
+        % bwpim=bm4dw(nim2,dnim,noisesm(i));
+        bwpim = bwp(1,nim2/255,noisesm(i)/255,1,1,1);bwpim=bwpim*255;
+        psnrbwp2(i) = 20*log10(255/sqrt(mean((im2(index2)-round(bwpim(index2))).^2)));
+        ssimbwp2(i)=ssim_index3d( round(bwpim) , im2 , ker , index2 );
+
+        % bhim=bm4dh(nim2,noisesm(i));
+        % bhim=RiC(bhim,noisesm(i));
+
+        [~,bhim,~]=bm4d(1, nim2/255, noisesm(i)/255, 1,1,0,0,0);bhim=bhim*255;
+        Pbhim=cPRI_NL_PCA(nim2,9,1,noisesm(i)*ones(181,217,10),bhim,1);
+        pbhim=RINLMmy(bhim,nim2,noisesm(i),alpha,8);
+        psnrPbh2(i) = 20*log10(255/sqrt(mean((im2(index2)-round(Pbhim(index2))).^2)));
+        ssimPbh2(i)=ssim_index3d( round(Pbhim) , im2 , ker , index2 );
+        psnrpbh2(i) = 20*log10(255/sqrt(mean((im2(index2)-round(pbhim(index2))).^2)));
+        ssimpbh2(i)=ssim_index3d( round(pbhim) , im2 , ker , index2 );
+
+
 end
+residualPp=im2-Ppim;
+residualpp=im2-ppim;
+residualb=im2-bim;
+residualbwp=im2-bwpim;
+colormap(gray);
 
-% colormap(gray);
-% n=round(size(im2,3)/2);
-% subplot(3,3,1),imagesc(imrotate(im2(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,2),imagesc(imrotate(Nim2(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,3),imagesc(imrotate(dnim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,4),imagesc(imrotate(ddim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,5),imagesc(imrotate(gim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,6),imagesc(imrotate(dgdim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,7),imagesc(imrotate(PRINLMfim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,8),imagesc(imrotate(P2fim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,3,9),imagesc(imrotate(dpim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% psnrn=zeros(1,5);
-% for i=1:5
-%     Nim2=ricernd(im2, noisesm(i)*ones(imsize(1:3)));
-%     psnrn(i)=20*log10(255/sqrt(mean((im2(index)-Nim2(index)).^2)));
-% end
-%%
-%theoretical limit T1w
-psnrth=zeros(1,5);ssimth=zeros(1,5);
-%psnrthth=zeros(1,5);ssimthth=zeros(1,5);
+subplot(4,10,1),imagesc(imrotate(im2(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,2),imagesc(imrotate(nim2(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,3),imagesc(imrotate(Ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,4),imagesc(imrotate(ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,5),imagesc(imrotate(bim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,6),imagesc(imrotate(bwpim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,7),imagesc(imrotate(residualPp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,8),imagesc(imrotate(residualpp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,9),imagesc(imrotate(residualb(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,10),imagesc(imrotate(residualbwp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
 
-for i=1:5
-        noise3D=noisesm(i)*ones(imsize(1:3));
-        Nim1=ricernd(im1, noise3D);
-        Noise_map= noisesm(i)*ones( 191,227,191);
-        tgim=padarray(im1,[5, 5, 5],'symmetric');
-        miu=imboxfilt3( tgim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-        alpha=0.4;NNim1=padarray(Nim1,[5, 5, 5],'symmetric');
-        PRINLMfim2 = RI_NLM(tgim, NNim1, Noise_map, miu,alpha);%~5min
-%         PP=padarray(PRINLMfim2,[5, 5, 5],'symmetric');
-%         miumiu=imboxfilt3( PP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-%         PRINLMfim22=RI_NLM(PP, NNim1, Noise_map, miumiu,alpha);%~5min
-        index = find(im1>0);
-        psnrth(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim2(index)).^2)));
-        ker=[1 1 1];
-        ssimth(i)=ssim_index3d(PRINLMfim2,im1,ker,index);
-%         psnrthth(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim22(index)).^2)));
-%         ssimthth(i)=ssim_index3d(PRINLMfim22,im1,ker,index);
-end
+
 %%
-% %simulation large psnr
-% %p, pp, pd, pdp (scheme 2) im1
-% psnrc=zeros(1,5);ssimc=zeros(1,5);
-% 
-% psnrcp=zeros(1,5);ssimcp=zeros(1,5);
-% psnrcpp=zeros(1,5);ssimcpp=zeros(1,5);
-% psnr_dncnn=[46.32, 40.47, 37.82, 36.20, 34.71];
-% RMSE=255./10.^(psnr_dncnn/20);
-% psnrcpd=zeros(1,5);ssimcpd=zeros(1,5);
-% psnrcpdp=zeros(1,5);ssimcpdp=zeros(1,5);
-% %ndncnn=RMSE/mean(sqrt( kexi(  ) ), 'all' );% difficult to solve, Non-monotonic variation
-% %ndncnn=[1.24 2.40 3.23 3.87 4.56]; %derive from precomputation 
-% for i=1:5
-%         noise3D=noisesm(i)*ones(imsize(1:3)); 
-%         Nim1=ricernd(im1, noise3D);
-%         Noise_map= noisesm(i)*ones( 191,227,191);
-%         %tgim=padarray(im1,[5, 5, 5],'symmetric');
-%         %cim=ricernd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-%         cim=normrnd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-%         cgim=padarray(cim ,[5, 5, 5],'symmetric');
-%         miu=imboxfilt3( cgim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-%         alpha=0.4;NNim1=padarray(Nim1,[5, 5, 5],'symmetric');
-%         PRINLMfim2 = RI_NLM(cgim, NNim1, Noise_map, miu,alpha);%~5min
-%         PP=padarray(PRINLMfim2,[5, 5, 5],'symmetric');
-%         miumiu=imboxfilt3( PP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-%         PRINLMfim22=RI_NLM(PP, NNim1, Noise_map, miumiu,alpha);%~5min
-%         index = find(im1>0);
-%         psnrcp(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim2(index)).^2)));
-%         ker=[1 1 1];
-%         ssimcp(i)=ssim_index3d(PRINLMfim2,im1,ker,index);
-%         psnrcpp(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim22(index)).^2)));
-%         ssimcpp(i)=ssim_index3d(PRINLMfim22,im1,ker,index);    
-%         
-%         [dpim,~]=NLPCA(single(PRINLMfim2),x1(1),x1(2),x1(3));
-%         yichang=find(isnan(dpim));
-%         dpim(yichang)=PRINLMfim2(yichang);
-%         DP=padarray(dpim,[5, 5, 5],'symmetric');
-%         dmiu=imboxfilt3( DP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-%         pdpim=RI_NLM(DP, NNim1, Noise_map, dmiu,alpha);%~5min
-%         index = find(im1>0);
-%         psnrc(i)=20*log10(255/sqrt(mean((im1(index)-cim(index)).^2)));
-%         psnrcpd(i)= 20*log10(255/sqrt(mean((im1(index)-dpim(index)).^2)));
-%         ker=[1 1 1];
-%         ssimc(i)=ssim_index3d(cim,im1,ker,index);
-%         ssimcpd(i)=ssim_index3d(dpim,im1,ker,index);
-%         psnrcpdp(i)= 20*log10(255/sqrt(mean((im1(index)-pdpim(index)).^2)));
-%         ssimcpdp(i)=ssim_index3d(pdpim,im1,ker,index);    
-% end
+% %Partial Enlarged View, Center Right, bottom center
 % colormap(gray);
 % n=round(size(im1,3)/2);
-% subplot(2,2,1),imagesc(imrotate(PRINLMfim2(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(2,2,2),imagesc(imrotate(PRINLMfim22(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(2,2,3),imagesc(imrotate(dpim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(2,2,4),imagesc(imrotate(pdpim(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-%%
-%simulation large psnr, but impact NLM this time
-% psnrci=zeros(1,5);ssimci=zeros(1,5);
-% psnrcpi=zeros(1,5);ssimcpi=zeros(1,5);
-% psnrcppi=zeros(1,5);ssimcppi=zeros(1,5);
-% psnr_dncnn=[46.32, 40.47, 37.82, 36.20, 34.71];
-% RMSE=255./10.^(psnr_dncnn/20);
-% psnrcpdi=zeros(1,5);ssimcpdi=zeros(1,5);
-% psnrcpdpi=zeros(1,5);ssimcpdpi=zeros(1,5);
-% %ndncnn=RMSE/mean(sqrt( kexi(  ) ), 'all' );% difficult to solve, Non-monotonic variation
-% %ndncnn=[1.24 2.40 3.23 3.87 4.56]; %derive from precomputation 
-% for i=1:5
-%         noise3D=noisesm(i)*ones(imsize(1:3)); 
-%         Nim1=ricernd(im1, noise3D);
-%         Noise_map= noisesm(i)*ones( 191,227,191);
-%         %tgim=padarray(im1,[5, 5, 5],'symmetric');
-%         %cim=ricernd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-%         cim=normrnd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-%         cgim=padarray(cim ,[5, 5, 5],'symmetric');
-%         miu=imboxfilt3( cgim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-%         alpha=0.4;NNim1=padarray(Nim1,[5, 5, 5],'symmetric');
-%         PRINLMfim2 = RI_NLM(cgim, NNim1, Noise_map, miu,alpha);%~5min
-%         PP=padarray(PRINLMfim2,[5, 5, 5],'symmetric');
-%         miumiu=imboxfilt3( PP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-%         PRINLMfim22=RI_NLM(PP, NNim1, Noise_map, miumiu,alpha);%~5min
-%         index = find(im1>0);
-%         psnrcpi(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim2(index)).^2)));
-%         ker=[1 1 1];
-%         ssimcpi(i)=ssim_index3d(PRINLMfim2,im1,ker,index);
-%         psnrcppi(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim22(index)).^2)));
-%         ssimcppi(i)=ssim_index3d(PRINLMfim22,im1,ker,index);    
-%         
-%         [dpim , noise_mapr]=NLPCA(single(PRINLMfim2),x1(1),x1(2),x1(3),x1(4),x1(5), 1);
-%         yichang=find(isnan(dpim));
-%         dpim(yichang)=PRINLMfim2(yichang);
-%         DP=padarray(dpim,[5, 5, 5],'symmetric');
-%         dmiu=imboxfilt3( DP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-%         pdpim=RI_NLM(DP, NNim1, Noise_map, dmiu,alpha);%~5min
-%         index = find(im1>0);
-%         psnrci(i)=20*log10(255/sqrt(mean((im1(index)-cim(index)).^2)));
-%         psnrcpdi(i)= 20*log10(255/sqrt(mean((im1(index)-dpim(index)).^2)));
-%         ker=[1 1 1];
-%         ssimci(i)=ssim_index3d(cim,im1,ker,index);
-%         ssimcpdi(i)=ssim_index3d(dpim,im1,ker,index);
-%         psnrcpdpi(i)= 20*log10(255/sqrt(mean((im1(index)-pdpim(index)).^2)));
-%         ssimcpdpi(i)=ssim_index3d(pdpim,im1,ker,index);    
-% end
-
-
-
-
-%%
-%simulation small psnr
-%p, pp, pd, pdp (scheme 2) im1
-psnrc=zeros(1,5);ssimc=zeros(1,5);
-
-psnrcp=zeros(1,5);ssimcp=zeros(1,5);
-psnrcpp=zeros(1,5);ssimcpp=zeros(1,5);
-psnr_dncnn_brainweb=[45.00 39.61 36.75 34.93 33.43];
-RMSE=255./10.^(psnr_dncnn_brainweb/20);
-psnrcpd=zeros(1,5);ssimcpd=zeros(1,5);
-psnrcpdp=zeros(1,5);ssimcpdp=zeros(1,5);
-%ndncnn=RMSE/mean(sqrt( kexi(  ) ), 'all' );% difficult to solve, Non-monotonic variation
-%ndncnn=[1.24 2.40 3.23 3.87 4.56]; %derive from precomputation 
-for i=1:5
-        noise3D=noisesm(i)*ones(imsize(1:3)); 
-        Nim1=ricernd(im1, noise3D);
-        Noise_map= noisesm(i)*ones( 191,227,191);
-        %tgim=padarray(im1,[5, 5, 5],'symmetric');
-        %cim=ricernd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-        cim=normrnd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-        cgim=padarray(cim ,[5, 5, 5],'symmetric');
-        miu=imboxfilt3( cgim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-        alpha=0.4;NNim1=padarray(Nim1,[5, 5, 5],'symmetric');
-        PRINLMfim1 = RI_NLM(cgim, NNim1, Noise_map, miu,alpha);%~5min
-        PP=padarray(PRINLMfim1,[5, 5, 5],'symmetric');
-        miumiu=imboxfilt3( PP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-        PRINLMfim11=RI_NLM(PP, NNim1, Noise_map, miumiu,alpha);%~5min
-        index = find(im1>0);
-        psnrcp(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim1(index)).^2)));
-        ker=[1 1 1];
-        ssimcp(i)=ssim_index3d(PRINLMfim1,im1,ker,index);
-        psnrcpp(i)= 20*log10(255/sqrt(mean((im1(index)-PRINLMfim11(index)).^2)));
-        ssimcpp(i)=ssim_index3d(PRINLMfim11,im1,ker,index);    
-        
-        [dpim1,~] =NLPCA(single(PRINLMfim1),x1(1),x1(2),x1(3));
-        yichang=find(isnan(dpim1));
-        dpim1(yichang)=PRINLMfim1(yichang);
-        DP=padarray(dpim1,[5, 5, 5],'symmetric');
-        dmiu=imboxfilt3( DP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-        pdpim1=RI_NLM(DP, NNim1, Noise_map, dmiu,alpha);%~5min
-        index = find(im1>0);
-        psnrc(i)=20*log10(255/sqrt(mean((im1(index)-cim(index)).^2)));
-        psnrcpd(i)= 20*log10(255/sqrt(mean((im1(index)-dpim1(index)).^2)));
-        ker=[1 1 1];
-        ssimc(i)=ssim_index3d(cim,im1,ker,index);
-        ssimcpd(i)=ssim_index3d(dpim1,im1,ker,index);
-        psnrcpdp(i)= 20*log10(255/sqrt(mean((im1(index)-pdpim1(index)).^2)));
-        ssimcpdp(i)=ssim_index3d(pdpim1,im1,ker,index);    
-end
-%%
-colormap(gray);
-n=round(size(im1,3)/2);
-n1=round(size(im1,1)/3);nn1=2*n1;
-n2=round(size(im1,2)/3);nn2=2*n2;
-%line
-%subplot(4,5,1),imagesc(imrotate(im1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(4,5,2),imagesc(imrotate(Nim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(4,5,3),imagesc(imrotate(PRINLMfim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(4,5,4),imagesc(imrotate(PRINLMfim11(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(4,5,5),imagesc(imrotate(dpim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(4,5,6),imagesc(imrotate(pdpim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
-
-%Partial Enlarged View, Center Right, bottom center
-subplot(4,5,1),imagesc(imrotate(im1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,2),imagesc(imrotate(Nim1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,3),imagesc(imrotate(PRINLMfim1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,4),imagesc(imrotate(PRINLMfim11(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,5),imagesc(imrotate(dpim1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,6),imagesc(imrotate(pdpim1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
-
-%%
-%scheme 2 , im2
-% psnrcpd=zeros(1,5);
-% ssimcpd=zeros(1,5);
-% psnrcpdp=zeros(1,5);
-% ssimcpdp=zeros(1,5);
-% for i=1:5
-%     noise3D=noisesm(i)*ones(imsize(1:3)); 
-%     Nim2=ricernd(im2, noise3D);
-%     Noise_map= noisesm(i)*ones( 191,227,191);
-%     %tgim=padarray(im1,[5, 5, 5],'symmetric');
-%     cim=ricernd(im2, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-%     cgim=padarray(cim ,[5, 5, 5],'symmetric');
-%     miu=imboxfilt3( cgim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-%     alpha=0.4;NNim2=padarray(Nim2,[5, 5, 5],'symmetric');
-%     PRINLMfim2 = RI_NLM(cgim, NNim2, Noise_map, miu,alpha);%~5min
-%     [dpim , noise_mapr]=NLPCA(single(PRINLMfim2),x1(1),x1(2),x1(3),x1(4),x1(5), 1);
-%     yichang=find(isnan(dpim));
-%     dpim(yichang)=PRINLMfim2(yichang);
-%     DP=padarray(dpim,[5, 5, 5],'symmetric');
-%     dmiu=imboxfilt3( DP  , 'padding' , 'symmetric' ) ;%3D mean matrix of PRINLMfim2
-%     pdpim=RI_NLM(DP, NNim2, Noise_map, dmiu,alpha);%~5min
-%     index = find(im1>0);
-%     psnrcpd(i)= 20*log10(255/sqrt(mean((im2(index)-dpim(index)).^2)));
-%     ker=[1 1 1];
-%     ssimcpd(i)=ssim_index3d(PRINLMfim2,im2,ker,index);
-%     psnrcpdp(i)= 20*log10(255/sqrt(mean((im2(index)-pdpim(index)).^2)));
-%     ssimcpdp(i)=ssim_index3d(PRINLMfim22,im2,ker,index);    
-% end
-%%
-%precomputation
-% psnrtest=zeros(1,411);
-% for i=100:510
-%     sg=i/100;
-%     noise3D=sg*ones(imsize(1:3)); 
-%     Nim1=ricernd(im1, noise3D);
-%     psnrtest(i-99)= 20*log10(255/sqrt(mean((im1(index)-Nim1(index)).^2)));
-% end
-% psnrtest=[psnrtest, zeros(1,100)];
-% for i=511:610
-%     sg=i/100;
-%     noise3D=sg*ones(imsize(1:3)); 
-%     Nim1=ricernd(im1, noise3D);
-%     psnrtest(i-99)= 20*log10(255/sqrt(mean((im1(index)-Nim1(index)).^2)));
-% end
-%%
-%scheme 1 based on more impact NLM
-%First check the accuracy of the scheme
-% an absolutely powerful method to obtain local noise estimation given im.
-%when intensity of noise relates and only relates to signal intensity
-% noise3D=noisesm(1)*ones(imsize(1:3)); 
-% Nim1=ricernd(im1, noise3D);
-% SIGr=zeros(imsize(1:3)); 
-% for j=0:255
-%     vtemp=find(im1==j);
-%     %Nim1=ricernd(im1, noise3D);
-%     ntemp=Nim1(vtemp);
-%     %ntemp= PRINLMfim2(vtemp);
-%     sigma2=mean(ntemp.^2 )-(mean(ntemp ))^2;
-%     sigma=sqrt(sigma2);
-%     SIGr(vtemp)= sigma;
-% end
-% SIGg=SIGr./sqrt(kexi( im1/2.55 )) ;
-%fully correct !!
-
-% implementation 
-%f2 becomes weaker than f at high PSNR, we need to solve it
-% psnr_dncnn=[46.32, 40.47, 37.82, 36.20, 34.71];
-% RMSE=255./10.^(psnr_dncnn/20);
-% ndncnn=[1.24 2.40 3.23 3.87 4.56]; %derive from precomputation - Rician
-% psnrcthxian=zeros(1,5);ssimcthxian=zeros(1,5);
-% for i=1:5
-%     noise3D=noisesm(i)*ones(imsize(1:3)); 
-%     Nim1=ricernd(im1, noise3D);
-%     Noise_map= noisesm(i)*ones( 191,227,191);
-%     %tgim=padarray(im1,[5, 5, 5],'symmetric');
-%     cim=normrnd(im1, RMSE(i)*ones(imsize(1:3)));%construct a pre-filtered image
-%     cgim=padarray(cim ,[5, 5, 5],'symmetric');
-%     miu=imboxfilt3( cgim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-%     alpha=0.4;NNim1=padarray(Nim1,[5, 5, 5],'symmetric');
-%     PRINLMfim = RI_NLM(cgim, NNim1, Noise_map, miu,alpha);%~5min
-%     Ptemp = padarray(PRINLMfim,[5 5 5],'symmetric');
-%     mu=imboxfilt3( Ptemp  , 'padding' , 'symmetric' );
-%     nosemap=zeros(imsize(1:3)); 
-%     %rounding off
-%     Pfim = round( PRINLMfim);
-%     maxPfim = max(Pfim,[],'all');
-%     for j=0:maxPfim
-%         vtemp=find(Pfim==j);
-%         ntemp=cgim(vtemp);
-% %         lower=mean( ntemp )-2*std(ntemp ,1) ;
-% %         upper=mean( ntemp )+2*std(ntemp ,1) ;
-% %         ntemp=ntemp( (ntemp<upper)&(ntemp>lower));
-%         sigma2=mean(ntemp.^2 )-(mean(ntemp ))^2;
-%         %More sophisticated algorithms are needed internally
-%         sigma=sqrt(sigma2);
-%         nosemap(vtemp)= sigma;
-%     end
-%     %max nosemap=67+
-%     %cfai =  (0.9953*logamma-1.716)./(logamma-1.787) ; idx = (logamma<1.913); cfai(idx) = 0;
-%     nosemap=padarray(nosemap,[5 5 5],'symmetric');
-%     Fim = RI_NLMxian(Ptemp, cgim, nosemap, mu, alpha );
-%     psnrcthxian(i)= 20*log10(255/sqrt(mean((im1(index)-Fim(index)).^2)));
-%     ssimcthxian(i)=ssim_index3d(Fim,im1,ker,index);        
-% end
-
-
-
-
-
-%%
-%The image itself was used to guide logamma
-%spatial locality
-% psnryc1=zeros(1,5);ssimyc1=zeros(1,5);
-% pre=zeros(3,3,3);
-% pre(:,:,1)=[3 2 3;2 1 2;3 2 3] ;pre(:,:,2)=[2 1 2;1 0 1;2 1 2] ;pre(:,:,3)= [3 2 3;2 1 2;3 2 3] ;
+% n1=round(size(im1,1)/3);nn1=2*n1;
+% n2=round(size(im1,2)/3);nn2=2*n2;
+% %line
+% %subplot(4,5,1),imagesc(imrotate(im1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
+% %subplot(4,5,2),imagesc(imrotate(Nim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
+% %subplot(4,5,3),imagesc(imrotate(PRINLMfim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
+% %subplot(4,5,4),imagesc(imrotate(PRINLMfim11(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
+% %subplot(4,5,5),imagesc(imrotate(dpim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
+% %subplot(4,5,6),imagesc(imrotate(pdpim1(:,:,n),90));set(gca,'xtick',[],'ytick',[]);
 % 
-% for i=1:5
-%     Nim1=ricernd(im1, noiselr(i)*ones(imsize(1:3)));
-%     %gaussian kernel
-%     window=exp( -pre.^2/(2*noiselr(i)^2 ));
-%     window=window/sum(window(:));
-%     u1im  = convn( Nim1,window, 'same');
-%     u2im = convn( Nim1.*Nim1,window, 'same') ;
-%     
-%     %u2im= imboxfilt3(Nim1.^2 , 3 , 'padding' , 'symmetric');
-%     %u1im=imboxfilt3(Nim1, 3 , 'padding' , 'symmetric');
-%     sigma2=u2im-u1im.^2;
-%     sigma = sqrt(sigma2);
-%     logamma=u1im./sigma;
-%     logamma=reshape(logamma,1,181*217*181);
-%     idxmin = (logamma<min(effSNR)); logamma(idxmin) = min(effSNR);%avoid outliers
-%     idxmax=(logamma>max(effSNR));
-%     theta = interp1(effSNR, ptheta, logamma, 'linear');theta(idxmax)=sqrt((logamma(idxmax)).^2-1);
-%     theta=reshape(theta,181,217,181);
-%     sigmag=sqrt(u2im./(2+theta.^2));
-%     %         temp = interp1(fai, etta, theta, 'linear');%arrayfun(@ettainv, eetta);
-%     %         temp=reshape(temp,181,217,181);
-%     %         sigmag= imboxfilt3(Nim , 3 , 'padding' , 'symmetric')./temp;
-%     %         theta=reshape(theta,181,217,181);
-%     vim=theta.*sigmag;
-%     sigmag=imboxfilt3(sigmag , 15 , 'padding' , 'symmetric');
-%     Cov = std( sigmag , 1 , 'all' )/mean( sigmag , 'all');
-%     if Cov <0.15
-%         noise_map = mean( sigmag , 'all')*ones(181,217,181);
-%     else
-%         noise_map = sigmag;
-%     end
-%     NNim = padarray(Nim1,[5, 5, 5],'symmetric');
-%     GGim = padarray(vim,[5, 5, 5],'symmetric');
-%     Noise_map=padarray(noise_map,[5, 5, 5],'symmetric');
-%     miu = imboxfilt3( GGim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-%     alpha=0.4;
-%     PRINLMfim = RI_NLM(GGim, NNim, Noise_map, miu,alpha);%~5min
-%     index = find(im1>0);
-%     psnryc1(i) = 20*log10(255/sqrt(mean((im1(index)-PRINLMfim(index)).^2)));
-%     ssimyc1(i) = ssim_index3d(im1,PRINLMfim,[1 1 1],index);
-% end
-%%
-%get CIFTI files into MATLAB
-%filename = 'D:\MATLAB\biyelunwen\T1w_acpc_dc_restore.nii ';
-%wbcommand = 'D:\scientific_research\biyesheji\software\workbench-windows64-v1.5.0\workbench\bin_windows64\wb_command.exe ';
-%cii = ciftiopen(filename,wbcommand);
-%CIFITdata=cii.cdata;
+% 
+% subplot(4,5,1),imagesc(imrotate(im1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,5,2),imagesc(imrotate(Nimbw(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,5,3),imagesc(imrotate(PRINLMfim1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,5,4),imagesc(imrotate(PRINLMfim11(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,5,5),imagesc(imrotate(dpim1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,5,6),imagesc(imrotate(pdpim1(nn1:end,n2:nn2,n),90));set(gca,'xtick',[],'ytick',[]);
 
-%V=niftiread('T1w_acpc_dc.nii');
+
+
+%%
+% %IXI 0.5% noise/threshold, where threshold=300 
+% psnrnix=zeros(1,5);ssimnix=zeros(1,5);
+% psnrpix=zeros(1,5);ssimpix=zeros(1,5);
+% psnrbix=zeros(1,5);ssimbix=zeros(1,5);
+% psnrPpix=zeros(1,5);ssimPpix=zeros(1,5);
+% psnrppix=zeros(1,5);ssimppix=zeros(1,5);
+% psnrbwpix=zeros(1,5);ssimbwpix=zeros(1,5);
+% psnrPbhix=zeros(1,5);ssimPbhix=zeros(1,5);
+% psnrpbhix=zeros(1,5);ssimpbhix=zeros(1,5);
+% 
+% ma4=400;
+% noiselr=ma4*0.01*[1 3 5 7 9];
+% Imix=round(imix/ma4*255);
+% Imix(Imix>255)=255;
+% rt=ma4/255;
+% ma=max(imix,[],'all');
+% % noiselr=ma*0.01*[1 3 5 7 9];
+% % Imix=round(imix/ma*255);
+% % rt=ma/255;
+
+% for i=1:5
+% 
+%         nimix=round(ricernd(imix, noiselr(i)*ones(281,277,10)));
+%         %round(ricernd(Imix, noisesm(i)*ones(260,311,10)));
+%         %psnrn3(i) = 20*log10(4096/sqrt(mean((imix(index3)-nim3(index3)).^2)));
+%         psnrnix(i) = 20*log10(255/sqrt(mean((Imix(indexix)-dis255(nimix(indexix)/rt)).^2)));
+%         ssimnix(i)=ssim_index3d( dis255(nimix/rt) , Imix , ker , indexix );
+% 
+%         dnim=NLPCAnp( (nimix),noiselr(i),2.2);%dnnim=NLPCAnp( (nnimix),noisesm(i),2.2);
+%         dnim = RiC(dnim,noiselr(i));%dnnim=RiC(dnnim,noisesm(i));
+% 
+%         %psnrpix(i) = 20*log10(4096/sqrt(mean((imix(indexix)-round(dnim(indexix))).^2)));
+%         psnrpix(i) = 20*log10(255/sqrt(mean((Imix(indexix)-dis255(dnim(indexix)/rt)).^2)));
+%         ssimpix(i)=ssim_index3d( dis255(dnim/rt) , Imix , ker , indexix );
+% 
+%         %[~,bim,~] = bm4d(1, nim3/4096, noiselr(i)/4096, 1,1,1,0,0);bim=bim*4096;
+%         [~,bim,~] = bm4d(1, nimix/ma4, noiselr(i)/ma4, 1,1,1,0,0);bim=bim*ma4;
+%         %psnrb3(i) = 20*log10(4096/sqrt(mean((imix(index3)-round(bim(index3))).^2)));
+%         psnrbix(i) = 20*log10(255/sqrt(mean((Imix(indexix)-dis255(bim(indexix)/rt)).^2)));
+%         ssimbix(i)=ssim_index3d( dis255(bim/rt) , Imix , ker , indexix );
+% 
+%         Ppim = cPRI_NL_PCA( nimix, 9,1,noiselr(i)*ones(281,277,10),dnim,1);
+%         nnimix=(nimix/rt);dnnim=dnim/rt;nnimix(nnimix>255)=255;dnnim(dnnim>255)=255;
+%         ppim = RINLMmy(dnnim, nnimix, noisesm(i),alpha,8);%ma3
+%         %psnrPp3(i) = 20*log10(4096/sqrt(mean((imix(index3)-round(Ppim(index3))).^2)));
+%         psnrPpix(i) = 20*log10(255/sqrt(mean((Imix(indexix)-dis255(Ppim(indexix)/rt)).^2)));
+%         ssimPpix(i)=ssim_index3d( dis255(Ppim/rt) , Imix , ker , indexix );
+%         %psnrppix(i) = 20*log10(4096/sqrt(mean((imix(indexix)-round(ppim(indexix))).^2)));
+%         psnrppix(i)= 20*log10(255/sqrt(mean((Imix(indexix)-dis255(ppim(indexix))).^2)));
+%         ssimppix(i)=ssim_index3d( dis255(ppim) , Imix , ker , indexix );
+% 
+%         % bwpim=bm4dw(nimix,dnim,noiselr(i));
+%         %bwpim = bwp(1,nimix/4096,noiselr(i)/4096,1,1,1);bwpim=bwpim*4096;
+%         %bwpim = bwp(1,nimix/ma4,noiselr(i)/ma4,1,1,1);bwpim=bwpim*ma4;
+%         %psnrbwpix(i) = 20*log10(4096/sqrt(mean((imix(indexix)-round(bwpim(indexix))).^2)));
+%         %psnrbwpix(i) = 20*log10(255/sqrt(mean((Imix(indexix)-dis255(bwpim(indexix)/rt)).^2)));
+%         %ssimbwpix(i)=ssim_index3d( dis255(bwpim/rt) , Imix , ker , indexix );
+% 
+%         % bhim=bm4dh(nimix,noiselr(i));
+%         % bhim=RiC(bhim,noiselr(i));
+%         % %[~,bhim,~]=bm4d(1, nimix/4096, noiselr(i)/4096, 1,1,0,0,0);bhim=bhim*4096;
+%         % 
+%         % % [~,bhim,~]=bm4d(1, nimix/ma3, noiselr(i)/ma3, 1,1,0,0,0);bhim=bhim*ma3;
+%         % Pbhim=cPRI_NL_PCA(nimix,9,1,noiselr(i)*ones(260,311,10),bhim,1);
+%         % bhhim=bhim/rt;bhhim(bhhim>255)=255;%nnim3=(nim3/rt);
+%         % pbhim=RINLMmy(bhhim,nnimix,noisesm(i),alpha,8);
+%         % 
+%         % %psnrPbhix(i) = 20*log10(4096/sqrt(mean((imix(indexix)-round(Pbixim(indexix))).^2)));
+%         % 
+%         % psnrPbhix(i) = 20*log10(255/sqrt(mean((Imix(indexix)-dis255(Pbhim(indexix)/rt)).^2)));
+%         % ssimPbhix(i)=ssim_index3d( dis255(Pbhim/rt) , Imix , ker , indexix );
+%         % 
+%         % %psnrpbhix(i) = 20*log10(4096/sqrt(mean((imix(indexix)-round(pbhim(indexix))).^2)));
+%         % psnrpbhix(i) = 20*log10(255/sqrt(mean((Imix(indexix)-dis255(pbhim(indexix)/rt)).^2)));
+%         % ssimpbhix(i)=ssim_index3d( dis255(pbhim/rt) , Imix , ker , indexix );
+% 
+% 
+% end
+% %residualPp=Imix-dis255(Ppim/rt);
+% residualpp=Imix-dis255(ppim);
+% residualb=Imix-dis255(bim/rt);
+% residualbwp=Imix-dis255(bwpim/rt);
+% %Ppim=dis255(Ppim/rt);
+% ppim=dis255(ppim);
+% bim=dis255(bim/rt);
+% bwpim=dis255(bwpim/rt);
+% colormap(gray);
+% 
+% subplot(4,10,31),imagesc(imrotate(Imix(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,10,32),imagesc(imrotate(nnimix(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% %subplot(4,10,33),imagesc(imrotate(Ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,10,34),imagesc(imrotate(ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,10,35),imagesc(imrotate(bim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,10,36),imagesc(imrotate(bwpim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% %subplot(4,10,37),imagesc(imrotate(residualPp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,10,38),imagesc(imrotate(residualpp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,10,39),imagesc(imrotate(residualb(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+% subplot(4,10,40),imagesc(imrotate(residualbwp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+
 %%
 %real clinical data
-nii=load_nii('T1w_acpc_dc_restore.nii.gz');
-imch=nii.img;
-%reslice_nii('IXI002-Guys-0828-PD.nii.gz', '0828-PD.nii.gz');
-%nii=load_nii('0828-PD.nii.gz');
-%imci=nii.img;
-nii=load_nii('OAS1_0001_MR1_mpr-1_anon.img');
-imco=nii.img;
-imco=single(imco);
-%OASIS
-tic
-sigmago=RicianSTD(imco);
-toc
+%HCP 1%
+%real clinical data
 
-noise_mapo=sigmago*ones(size(imco));
-tic
-[dnim,~]=NLPCA(imco,2.12,1.16,2.46);
-toc
-yichang=find(isnan(dnim));
-dnim(yichang)=imco(yichang);
-A1=size(imco,1);B1=size(imco,2);C1=size(imco,3);
-        eetta = dnim ./ noise_mapo;
-        eetta=reshape(eetta,1,A1*B1*C1);
-        idxe = (eetta<min(etta)); eetta(idxe) = min(etta);%avoid outliers
-        idxd = (eetta>max(etta)); eetta(idxd) = max(etta);%avoid outliers
-        temp = interp1(etta, fai, eetta, 'linear');%arrayfun(@ettainv, eetta);
-        temp=reshape(temp,A1,B1,C1);
-        gimo = noise_mapo.* temp;
-        NNim = padarray(imco,[5, 5, 5],'symmetric');
-        GGim = padarray(gimo,[5, 5, 5],'symmetric');
-        Noise_mapo=sigmago*ones((A1+10),(B1+10),(C1+10));%padarray(noise_map,[5, 5, 5],'symmetric');
-        miu = imboxfilt3( GGim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-        tic
-        PRINLMfimo = RI_NLM(GGim, NNim, Noise_mapo, miu,alpha);%~5min
-        toc
-        tic
-        [dpimo,~]=NLPCA(PRINLMfimo,2.12,1.16,2.46);
-        toc
-        yichang=find(isnan(dpimo));
-dpimo(yichang)=PRINLMfimo(yichang);
-residual1=imco-dpimo;
-residualg1=imco-gimo;
 
-%HCP T1w
-tic
-sigmagh=RicianSTD(imch);
-toc
+%  Often there are only a few high-value pixels, so the whole image looks 
+% very dark. We can improve this by letting all pixel values above a
+% certain level be displayed at maximum brightness(McRobbie et al., 2017). 
+% On the other hand it is also helpful to make the background noise as dark 
+% as possible, and this is done by setting all pixel values below the noise 
+% level to have minimum brightness. 
+% However, remember that you are only changing the displayed voxel
+% intensities, not the values in the underlying MR images.
 
-noise_maph=sigmagh*ones(size(imch));
-tic
-[dnim,~]=NLPCA(imch,2.12,1.16,2.46);
-toc
-yichang=find(isnan(dnim));
-dnim(yichang)=imch(yichang);
-A2=size(imch,1);B2=size(imch,2);C2=size(imch,3);
-        eetta = dnim ./ noise_maph;
-        eetta=reshape(eetta,1,A2*B2*C2);
-        idxe = (eetta<min(etta)); eetta(idxe) = min(etta);%avoid outliers
-        temp = interp1(etta, fai, eetta, 'linear');%arrayfun(@ettainv, eetta);
-        temp=reshape(temp,A2,B2,C2);
-        gimh = noise_maph.* temp;
-        NNim = padarray(imch,[5, 5, 5],'symmetric');
-        GGim = padarray(gimh,[5, 5, 5],'symmetric');
-        Noise_maph=sigmagh*ones((A2+10),(B2+10),(C2+10));%padarray(noise_map,[5, 5, 5],'symmetric');
-        miu = imboxfilt3( GGim  , 'padding' , 'symmetric' ) ;%3D mean matrix of ggim
-        tic
-        PRINLMfimh = RI_NLM(GGim, NNim, Noise_maph, miu,alpha);%~5min
-        toc
-        tic
-        [dpimh,~]=NLPCA(PRINLMfimh,2.12,1.16,2.46);
-        toc
-yichang=find(isnan(dpimh));
-dpimh(yichang)=PRINLMfimh(yichang);
-residual2=imch-dpimh;
-residualg2=imch-gimh;
-%%
-%drawing
+        nim3=imh;
+
+
+        dnim=NLPCAnp( (nim3),noimch,2.2);
+        dnim = RiC(dnim,noimch);
+        
+
+        
+        [~,bim,~] =bm4d(1, nim3/1024, noimch/1024, 1,1,1,0,0);bim=bim*1024;
+
+
+        Ppim = cPRI_NL_PCA( nim3, 9,1,noimch*ones(260,311,260),dnim,1);
+        rt=1024/255;
+        nnim3=(nim3/rt);dnnim=dnim/rt;nnim3(nnim3>255)=255;dnnim(dnnim>255)=255;
+        ppim = RINLMmy(dnnim, nnim3, noimch/rt,alpha,8);
+
+
+        bwpim=bm4dw(nim3,dnim,noimch);
+
+
+        % bhim=bm4dh(nim4,noimch);
+        % bhim=RiC(bhim,noimch);
+        % Pbhim=cPRI_NL_PCA(nim4,9,1,noimch*ones(256,256,128),bhim,1);
+        % pbhim=RINLMmy(bhim,nim4,noimch,alpha,12,4095);
+
+
+
+% residualPp=imch-Ppim;
+% residualpp=imch-ppim;
+% residualb=imch-bim;
+
+imh=dis255(imh/rt);
+residualPp=imh-dis255(Ppim/rt);
+residualpp=imh-dis255(ppim);
+residualb=imh-dis255(bim/rt);
+residualbwp=imh-dis255(bwpim/rt);
+Ppim=dis255(Ppim/rt);
+ppim=dis255(ppim);
+bim=dis255(bim/rt);
+bwpim=dis255(bwpim/rt);
+
+
 colormap(gray);
-ni1=round(size(imco,1)/2); nh1=round(size(imch,1)/2);
-ni2=round(size(imco,2)/2); nh2=round(size(imch,2)/2);
-ni3=round(size(imco,3)/2); nh3=round(size(imch,3)/2);
 
-%traverse OASIS dgpd
-subplot(4,5,7),imagesc(imrotate(reshape(imco(:,ni2,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,8),imagesc(imrotate(reshape(dpimo(:,ni2,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,9),imagesc(imrotate(reshape(residual1(:,ni2,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-%coronal OASIS dgpd
-subplot(4,5,10),imagesc(imrotate(reshape(imco(ni1,:,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,11),imagesc(imrotate(reshape(dpimo(ni1,:,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,12),imagesc(imrotate(reshape(residual1(ni1,:,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-%sagittal OASIS dgpd
-subplot(4,5,13),imagesc(imrotate(imco(:,:,ni3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,14),imagesc(imrotate(dpimo(:,:,ni3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,15),imagesc(imrotate(residual1(:,:,ni3),90));set(gca,'xtick',[],'ytick',[]);
-%sagittal HCP dgpd
-subplot(4,5,16),imagesc(imrotate(reshape(imch(nh1,:,:),311,260),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,17),imagesc(imrotate(reshape(dpimh(nh1,:,:),311,260),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,18),imagesc(imrotate(reshape(residual2(nh1,:,:),311,260),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,11),imagesc(imrotate(imh(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+%subplot(4,10,22),imagesc(imrotate(nim2(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,13),imagesc(imrotate(Ppim(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,14),imagesc(imrotate(ppim(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,15),imagesc(imrotate(bim(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,16),imagesc(imrotate(bwpim(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,17),imagesc(imrotate(residualPp(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,18),imagesc(imrotate(residualpp(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,19),imagesc(imrotate(residualb(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,20),imagesc(imrotate(residualbwp(:,:,130),90));set(gca,'xtick',[],'ytick',[]);
 
-%sagittal HCP dg
-%subplot(3,6,10),imagesc(imrotate(reshape(imch(nh1,:,:),311,260),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,19),imagesc(imrotate(reshape(gimh(nh1,:,:),311,260),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,5,20),imagesc(imrotate(reshape(residualg2(nh1,:,:),311,260),90));set(gca,'xtick',[],'ytick',[]);
-%(:,:,nh3),260,311),90
-%residual3=(gimo-dpimo);
-%subplot(3,6,13),imagesc(imrotate(reshape(residual3(:,ni2,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-% %traverse OASIS
-% subplot(3,6,7),imagesc(imrotate(reshape(imco(:,ni2,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,8),imagesc(imrotate(reshape(dpimo(:,ni2,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,9),imagesc(imrotate(reshape(residual1(:,ni2,:),256,128),180));set(gca,'xtick',[],'ytick',[]);
-% %coronal HCP
-% subplot(3,6,10),imagesc(imrotate(reshape(imch(:,nh2,:),260,260),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,11),imagesc(imrotate(reshape(dpimh(:,nh2,:),260,260),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,12),imagesc(imrotate(reshape(residual2(:,nh2,:),260,260),90));set(gca,'xtick',[],'ytick',[]);
-% %coronal OASIS
-% subplot(3,6,13),imagesc(imrotate(reshape(imco(:,:,ni3),256,256),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,14),imagesc(imrotate(reshape(dpimo(:,:,ni3),256,256),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,15),imagesc(imrotate(reshape(residual1(:,:,ni3),256,256),90));set(gca,'xtick',[],'ytick',[]);
-% %traverse HCP
-% subplot(3,6,16),imagesc(imrotate(reshape(imch(:,:,nh3),260,311),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,17),imagesc(imrotate(reshape(dpimh(:,:,nh3),260,311),90));set(gca,'xtick',[],'ytick',[]);
-% subplot(3,6,18),imagesc(imrotate(reshape(residual2(:,:,nh3),260,311),90));set(gca,'xtick',[],'ytick',[]);
 
-%subplot(2,3,3),imagesc(imrotate(imch(87:173,104:207,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(2,3,4),imagesc(imrotate(imci(85:171,91:182,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(2,3,5),imagesc(imrotate(PRINLMfimh(87:173,104:207,n),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(2,3,6),imagesc(imrotate(PRINLMfimi(85:171,91:182,n),90));set(gca,'xtick',[],'ytick',[]);
 
+%%
+%real clinical data
+
+%OASIS 9.44%
+%  Often there are only a few high-value pixels, so the whole image looks 
+% very dark. We can improve this by letting all pixel values above a
+% certain level be displayed at maximum brightness(McRobbie et al., 2017). 
+% On the other hand it is also helpful to make the background noise as dark 
+% as possible, and this is done by setting all pixel values below the noise 
+% level to have minimum brightness. 
+% However, remember that you are only changing the displayed voxel
+% intensities, not the values in the underlying MR images.
+
+
+        nim4=imo;
+
+
+        dnim=NLPCAnp( (nim4),noimo,2.2);
+        dnim = RiC(dnim,noimo);
+        
+
+        
+        %[~,bim,~] =bm4d(1, nim4/1024, noimo/1024, 1,1,1,0,0);bim=bim*1024;
+        [~,bim,~] =bm4d(1, nim4/3072, noimo/3072, 1,1,1,0,0);bim=bim*3072;
+
+        Ppim = cPRI_NL_PCA( nim4, 9,1,noimo*ones(256,256,128),dnim,1);
+        rt=3*1024/255;
+        nnim4=(nim4/rt);dnnim=dnim/rt;nnim4(nnim4>255)=255;dnnim(dnnim>255)=255;
+        ppim = RINLMmy(dnnim, nnim4, noimo/rt,alpha,8);
+
+
+        %bwpim=bm4dw(nim4,dnim,noimo);
+
+
+        % bhim=bm4dh(nim4,noimo);
+        % bhim=RiC(bhim,noimo);
+        % Pbhim=cPRI_NL_PCA(nim4,9,1,noimo*ones(256,256,128),bhim,1);
+        % pbhim=RINLMmy(bhim,nim4,noimo,alpha,12,4095);
+
+
+
+% residualPp=imo-Ppim;
+% residualpp=imo-ppim;
+% residualb=imo-bim;
+
+imo=dis255(imo/rt);
+residualPp=imo-dis255(Ppim/rt);
+residualpp=imo-dis255(ppim);
+residualb=imo-dis255(bim/rt);
+residualbwp=imo-dis255(bwpim/rt);
+Ppim=dis255(Ppim/rt);
+ppim=dis255(ppim);
+bim=dis255(bim/rt);
+bwpim=dis255(bwpim/rt);
+
+
+colormap(gray);
+
+
+
+
+
+
+subplot(4,10,21),imagesc(imrotate(imo(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+%subplot(4,10,22),imagesc(imrotate(nim2(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,23),imagesc(imrotate(Ppim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,24),imagesc(imrotate(ppim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,25),imagesc(imrotate(bim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,26),imagesc(imrotate(bwpim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,27),imagesc(imrotate(residualPp(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,28),imagesc(imrotate(residualpp(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,29),imagesc(imrotate(residualb(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,30),imagesc(imrotate(residualbwp(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
 
