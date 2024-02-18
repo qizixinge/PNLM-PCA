@@ -35,7 +35,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 14.`NLPCApso`: A MATLAB function which is the adaptation of NL-PCA filter for the PSO algorithm.
 
-- 15.`NLPCAnp`: A MATLAB function that tries to improve the efficiency of the NL-PCA filter under the optimal parameter set obtained by the PSO algorithm.
+- 15.`NLPCAnp`: A MATLAB function that demonstrates the code for realizing the NL-PCA filter with exact noise level.
 
 - 16.`NLPCA.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
 
@@ -57,27 +57,29 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 25.`T1w_acpc_dc_restore.nii.gz`: An example data file of T1w image from the HCP dataset.
 
-- 26.`RINLMmy.m`
+- 26.`RINLMmy.m`:
 
-- 27.`RiC.m`
+- 27.`RiC.m`:
 
-- 28.`bwp.m`
+- 28.`bwp.m`:
 
-- 29.`cPRI_NL_PCA.mexw64`
+- 29.`cPRI_NL_PCA.mexw64`:
 
-- 30.`dis255.m`
+- 30.`dis255.m`:
 
-- 31.`getTransfMatrix.m`
+- 31.`getTransfMatrix.m`:
 
-- 32.`optimizationRINLMmy.m`
+- 32.`optimizationRINLMmy.m`:
 
-- 33.`precomputation.m`
+- 33.`precomputation.m`:
 
-- 34.`truncateslice.m`
+- 34.`truncateslice.m`:
 
-- 35.`BM4D`
+- 35.
 
-- 36.`RiceOptVST`
+- 36.`RiceOptVST`: 
+
+- 37.`BM4D`: 
 
 
 
