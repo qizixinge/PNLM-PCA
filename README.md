@@ -57,19 +57,19 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 25.`T1w_acpc_dc_restore.nii.gz`: An example data file of T1w image from the HCP dataset.
 
-- 26.`RINLMmy.m`:
+- 26.`RINLMmy.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
 
-- 27.`RiC.m`:
+- 27.`RiC.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
 
-- 28.`truncateslice.m`:
+- 28.`truncateslice.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
 
 - 29.`cPRI_NL_PCA.mexw64`:
 
-- 30.`dis255.m`:
+- 30.`dis255.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
 
-- 31.`getTransfMatrix.m`:
+- 31.`getTransfMatrix.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
 
-- 32.`optimizationRINLMmy.m`:
+- 32.`optimizationRINLMmy.m`: A MATLAB script file that demonstrates the code for realizing the NL-PCA filter.
 
 - 33.`precomputation.m`: A MATLAB script file that shows how the data in `precomputation.mat` is calculated.
 
