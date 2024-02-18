@@ -57,27 +57,27 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 25.`T1w_acpc_dc_restore.nii.gz`: An example data file of T1w image from the HCP dataset
 
-- 26.
+- 26.`RINLMmy.m`
 
-- 27.
+- 27.`RiC.m`
 
-- 28.
+- 28.`bwp.m`
 
-- 29.
+- 29.`cPRI_NL_PCA.mexw64`
 
-- 30.
+- 30.`dis255.m`
 
-- 31.
+- 31.`getTransfMatrix.m`
 
-- 32.
+- 32.`optimizationRINLMmy.m`
 
-- 33.
+- 33.`precomputation.m`
 
-- 34.
+- 34.`truncateslice.m`
 
-- 35.
+- 35.`BM4D`
 
-- 36.
+- 36.`RiceOptVST`
 
 
 
