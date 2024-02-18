@@ -23,7 +23,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 8.`ricernd.m`: A MATLAB function file that adds Rician noise on a noise-free image.
 
-- 9.`RI_NLM.m`: A MATLAB function file that displays a possible version of rotationally invariant non-local mean filter.
+- 9.`RI_NLM.m`: A MATLAB function file that shows a possible implementation of `cPRI_NL_PCA.mexw64`.
 
 - 10.`psnrallM.m`: A MATLAB function which is used to find the optimal value of \$\tau\beta\$ and T in the NL-PCA filter.
 
@@ -71,7 +71,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 32.`optimizationRINLMmy.m`:
 
-- 33.`precomputation.m`: A MATLAB file that shows how the data in `precomputation.mat` is calculated.
+- 33.`precomputation.m`: A MATLAB script file that shows how the data in `precomputation.mat` is calculated.
 
 - 34.`RiceOptVST`:
 
