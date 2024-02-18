@@ -57,9 +57,5 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 25.`T1w_acpc_dc_restore.nii.gz`: An example data file of T1w image from the HCP dataset
 
-## 2. The structure of the auxiliary tool PD in the article
 
-The noise map input required by PD is estimated from the noisy data itself. A good filter can obtain the former during the pre-denoising process, such as the NL-PCA algorithm.
-
-![image](https://github.com/qizixinge/PCA-PRI-PCAr_and_PD/assets/128884645/8d31ecb1-48cd-4e3f-8668-9e4f1669a94f)
 
