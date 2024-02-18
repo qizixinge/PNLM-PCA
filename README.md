@@ -43,7 +43,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 18.`farras.m`: nearly symmetric filters for orthogonal 2-channel perfect reconstruction filter bank.
 
-- 19.`epsi.m`: A MATLAB function file which calculate the correction factor \$\kexi\$
+- 19.`epsi.m`: A MATLAB function file which calculate the correction factor \$\kesi\$
 
 - 20.`dwt3D`: 3-D Discrete Wavelet Transform.
 
