@@ -29,7 +29,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 11.`psnrall`: A MATLAB function which is used to find the optimal value of (d, M, w, \$\tau\beta\$, T) in the NL-PCA filter.
 
-- 12.`PD`: A MATLAB function which serves as the powerful auxiliary tool mentioned in the paper.
+- 12.`bm4dw.m`: A MATLAB function which serves as the powerful auxiliary tool mentioned in the paper.
 
 - 13.`PCA_PRI_PCAr`: A MATLAB function that shows the new collaborative algorithm proposed by us.
 
@@ -75,11 +75,9 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 34.`truncateslice.m`:
 
-- 35.
+- 35.`BM4D`: 
 
 - 36.`RiceOptVST`: 
-
-- 37.`BM4D`: 
 
 
 
