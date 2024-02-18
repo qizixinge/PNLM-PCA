@@ -25,9 +25,9 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 9.`RI_NLM.m`: A MATLAB function file that displays a possible version of rotationally invariant non-local mean filter.
 
-- 10.`psnrallM`: A MATLAB function which is used to find the optimal value of \$\tau\$ and T in the NL-PCA filter.
+- 10.`psnrallM`: A MATLAB function which is used to find the optimal value of \$\tau\beta\$ and T in the NL-PCA filter.
 
-- 11.`psnrall`: A MATLAB function which is used to find the optimal value of (d, M, w, \$\tau\$, T) in the NL-PCA filter.
+- 11.`psnrall`: A MATLAB function which is used to find the optimal value of (d, M, w, \$\tau\beta\$, T) in the NL-PCA filter.
 
 - 12.`PD`: A MATLAB function which serves as the powerful auxiliary tool mentioned in the paper.
 
@@ -43,7 +43,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 18.`farras.m`: nearly symmetric filters for orthogonal 2-channel perfect reconstruction filter bank.
 
-- 19.`epsi.m`: A MATLAB function file which calculate the correction factor \$\$
+- 19.`epsi.m`: A MATLAB function file which calculate the correction factor \$\kexi\$
 
 - 20.`dwt3D`: 3-D Discrete Wavelet Transform.
 
