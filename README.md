@@ -9,7 +9,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 1.`t2_ai_msles2_1mm_pn0_rf0.rawb`: An example data file of T2w MS lesion image from the BrainWeb dataset
 
-- 2.`t1_icbm_normal_1mm_pn0_rf0.rawb`: An example data file of T1w normal image from the BrainWeb dataset
+- 2.`pd_icbm_normal_1mm_pn0_rf0.rawb`: An example data file of PDw normal image from the BrainWeb dataset
 
 - 3.`precomputation.mat`: A MATLAB data file which provides pre-computed relevant data for images' Rician correction
 
@@ -23,7 +23,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 8.`ricernd.m`: A MATLAB function file which add Rician noise on a noise-free image
 
-- 9.`RI_NLM.m`: A MATLAB function file which display the principle of rotationally invariant non-local mean filter
+- 9.`RI_NLM.m`: A MATLAB function file which display a possible version of rotationally invariant non-local mean filter
 
 - 10.`psnrallM`: A MATLAB function which is used to find the optimal value of \$\$ and T in the NL-PCA filter&#x20;
 
@@ -35,7 +35,7 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 14.`NLPCApso`: A MATLAB function which is the adaptation of NL-PCA filter for the PSO algorithm
 
-- 15.`NLPCAmy`: A MATLAB function which tries to improve the efficiency of the NL-PCA filter under the optimal parameter set obtained by the PSO algorithm
+- 15.`NLPCAnp`: A MATLAB function which tries to improve the efficiency of the NL-PCA filter under the optimal parameter set obtained by the PSO algorithm
 
 - 16.`NLPCA.m`: A MATLAB function file which demonstrates the code for realizing the NL-PCA filter
 
