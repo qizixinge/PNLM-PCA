@@ -57,19 +57,19 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 25.`T1w_acpc_dc_restore.nii.gz`: An example data file of T1w image from the HCP dataset.
 
-- 26.`RINLMmy.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
+- 26.`RINLMmy.m`: A MATLAB function file that demonstrates the proposed new NLM structure.
 
-- 27.`RiC.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
+- 27.`RiC.m`: A MATLAB function file that corrects the image Ricianly.
 
-- 28.`truncateslice.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
+- 28.`truncateslice.m`: A MATLAB function file that extracts a 2D slice from a 3D image
 
-- 29.`cPRI_NL_PCA.mexw64`:
+- 29.`cPRI_NL_PCA.mexw64`: PRI-NLM filter created by Manjon et al.(2015).
 
-- 30.`dis255.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
+- 30.`dis255.m`: A MATLAB function file that lets all voxel values above 255 be displayed at maximum brightness.
 
-- 31.`getTransfMatrix.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter.
+- 31.`getTransfMatrix.m`: A MATLAB function file for `bwp.m` and `bm4dw.m`.
 
-- 32.`optimizationRINLMmy.m`: A MATLAB script file that demonstrates the code for realizing the NL-PCA filter.
+- 32.`optimizationRINLMmy.m`: A MATLAB script file that demonstrates the optimization process for the proposed PNLM-PCA.
 
 - 33.`precomputation.m`: A MATLAB script file that shows how the data in `precomputation.mat` is calculated.
 
