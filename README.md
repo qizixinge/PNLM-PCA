@@ -17,27 +17,27 @@ The contents contained in the MATLAB files are the following:&#x20;
 
 - 5.`Experiments.m`: A MATLAB script file which completely presents the code used in the whole process of the experiments
 
-- 6.`ssim_index3d.m`: A MATLAB function file which calculate the SSIM of a denoised image
+- 6.`ssim_index3d.m`: A MATLAB function file that calculates the SSIM of a denoised image
 
 - 7.`RicianSTD.m`: A MATLAB function file which is used to estimate the Rician noise in the MR image using the object-based method
 
-- 8.`ricernd.m`: A MATLAB function file which add Rician noise on a noise-free image
+- 8.`ricernd.m`: A MATLAB function file that adds Rician noise on a noise-free image
 
-- 9.`RI_NLM.m`: A MATLAB function file which display a possible version of rotationally invariant non-local mean filter
+- 9.`RI_NLM.m`: A MATLAB function file that displays a possible version of rotationally invariant non-local mean filter
 
 - 10.`psnrallM`: A MATLAB function which is used to find the optimal value of \$\$ and T in the NL-PCA filter&#x20;
 
 - 11.`psnrall`: A MATLAB function which is used to find the optimal value of (d, M, w, \$\$, T) in the NL-PCA filter&#x20;
 
-- 12.`PD`: A MATLAB function which serve as the powerful auxiliary tool mentioned in the paper
+- 12.`PD`: A MATLAB function which serves as the powerful auxiliary tool mentioned in the paper
 
-- 13.`PCA_PRI_PCAr`: A MATLAB function which shows the new collaborative algorithm proposed by us
+- 13.`PCA_PRI_PCAr`: A MATLAB function that shows the new collaborative algorithm proposed by us
 
 - 14.`NLPCApso`: A MATLAB function which is the adaptation of NL-PCA filter for the PSO algorithm
 
-- 15.`NLPCAnp`: A MATLAB function which tries to improve the efficiency of the NL-PCA filter under the optimal parameter set obtained by the PSO algorithm
+- 15.`NLPCAnp`: A MATLAB function that tries to improve the efficiency of the NL-PCA filter under the optimal parameter set obtained by the PSO algorithm
 
-- 16.`NLPCA.m`: A MATLAB function file which demonstrates the code for realizing the NL-PCA filter
+- 16.`NLPCA.m`: A MATLAB function file that demonstrates the code for realizing the NL-PCA filter
 
 - 17.`kmeans`: for image segmentation
 
@@ -56,6 +56,30 @@ The contents contained in the MATLAB files are the following:&#x20;
 - 24.`OAS1_0001_MRI_mpr-1_anon.hdr`: The above file cannot be read without it.
 
 - 25.`T1w_acpc_dc_restore.nii.gz`: An example data file of T1w image from the HCP dataset
+
+- 26.
+
+- 27.
+
+- 28.
+
+- 29.
+
+- 30.
+
+- 31.
+
+- 32.
+
+- 33.
+
+- 34.
+
+- 35.
+
+- 36.
+
+
 
 
 
