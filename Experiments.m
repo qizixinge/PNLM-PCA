@@ -374,10 +374,11 @@ for i=1:5
 
 
 end
-residualPp=im2-Ppim;
-residualpp=im2-ppim;
-residualb=im2-bim;
-residualbwp=im2-bwpim;
+
+% residualPp=im2-Ppim;
+% residualpp=im2-ppim;
+% residualb=im2-bim;
+% residualbwp=im2-bwpim;
 colormap(gray);
 
 subplot(4,10,1),imagesc(imrotate(im2(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
@@ -385,11 +386,11 @@ subplot(4,10,2),imagesc(imrotate(nim2(:,:,3),90));set(gca,'xtick',[],'ytick',[])
 subplot(4,10,3),imagesc(imrotate(Ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
 subplot(4,10,4),imagesc(imrotate(ppim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
 subplot(4,10,5),imagesc(imrotate(bim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,6),imagesc(imrotate(bwpim(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,7),imagesc(imrotate(residualPp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,8),imagesc(imrotate(residualpp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,9),imagesc(imrotate(residualb(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,10),imagesc(imrotate(residualbwp(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,6),imagesc(imrotate(im2(1:61,72:144,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,7),imagesc(imrotate(nim2(1:61,72:144,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,8),imagesc(imrotate(Ppim(1:61,72:144,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,9),imagesc(imrotate(ppim(1:61,72:144,3),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,10),imagesc(imrotate(bim(1:61,72:144,3),90));set(gca,'xtick',[],'ytick',[]);
 
 
 %%
@@ -637,11 +638,11 @@ imo=dis255(imo/rt);
 residualPp=imo-dis255(Ppim/rt);
 residualpp=imo-dis255(ppim);
 residualb=imo-dis255(bim/rt);
-residualbwp=imo-dis255(bwpim/rt);
+%residualbwp=imo-dis255(bwpim/rt);
 Ppim=dis255(Ppim/rt);
 ppim=dis255(ppim);
 bim=dis255(bim/rt);
-bwpim=dis255(bwpim/rt);
+%bwpim=dis255(bwpim/rt);
 
 
 colormap(gray);
@@ -651,14 +652,14 @@ colormap(gray);
 
 
 
-subplot(4,10,21),imagesc(imrotate(imo(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
-%subplot(4,10,22),imagesc(imrotate(nim2(:,:,3),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,23),imagesc(imrotate(Ppim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,24),imagesc(imrotate(ppim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,25),imagesc(imrotate(bim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,21),imagesc(imrotate(squeeze(imo(:,100,:)),180));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,22),imagesc(imrotate(squeeze(imo(1:128,100,43:86)),180));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,23),imagesc(imrotate(squeeze(Ppim(:,100,:)),180));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,24),imagesc(imrotate(squeeze(ppim(:,100,:)),180));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,25),imagesc(imrotate(squeeze(bim(:,100,:)),180));set(gca,'xtick',[],'ytick',[]);
 %subplot(4,10,26),imagesc(imrotate(bwpim(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,27),imagesc(imrotate(Ppim(61:113,74:138,64),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,28),imagesc(imrotate(ppim(61:113,74:138,64),90));set(gca,'xtick',[],'ytick',[]);
-subplot(4,10,29),imagesc(imrotate(bim(61:113,74:138,64),90));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,27),imagesc(imrotate(squeeze(Ppim(1:128,100,43:86)),180));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,28),imagesc(imrotate(squeeze(ppim(1:128,100,43:86)),180));set(gca,'xtick',[],'ytick',[]);
+subplot(4,10,29),imagesc(imrotate(squeeze(bim(1:128,100,43:86)),180));set(gca,'xtick',[],'ytick',[]);
 %subplot(4,10,30),imagesc(imrotate(residualbwp(:,:,64),90));set(gca,'xtick',[],'ytick',[]);
 
