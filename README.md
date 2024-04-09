@@ -1,7 +1,7 @@
 # [New non-local mean methods for MRI denoising based on global self-similarity between values](https://doi.org/10.1016/j.compbiomed.2024.108450)
 These are the code files for this article. This study improves the pre-filtered rotationally invariant non-local PCA method, ensuring its efficiency while improving algorithm performance. This work has two main contributions. First, the proposed new algorithm PNLM-PCA exhibits superior denoising performance in different types of MR images over some state-of-the-art algorithms. Second, a novel structure of non-local mean(NLM) is proposed, which simultaneously improves speed and accuracy. The proposed new structure is conducive to promoting the development of NLM based denoising algorithms for natural and MR images.
 
-DOI:&#x20;
+DOI: 10.1016/j.compbiomed.2024.108450
 
 ## The description of files in this repository
 
